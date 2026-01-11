@@ -52,7 +52,7 @@ def get_response(query, selected_category):
         return "Je vous écoute, n'hésitez pas à poser une question précise."
 
     max_similarity = -1
-    best_response = "Désolé, je n'ai pas trouvé de réponse précise. Pouvez-vous reformuler votre question ?"
+    best_response = "Désolé, je n'ai pas trouvé de réponse précise pour ce sujet. Pouvez-vous reformuler ?"
 
     target_categories = [selected_category] + HIDDEN_CATEGORIES
     filtered_data = [item for item in qa_data if item['categorie'] in target_categories]
@@ -72,10 +72,9 @@ def get_response(query, selected_category):
 def main():
     st.set_page_config(page_title="SmixBot Pro", page_icon="🤖", layout="centered")
 
-    # --- AMÉLIORATION LISIBILITÉ DARK MODE ---
+    # --- CSS PERSONNALISÉ (DARK MODE FRIENDLY) ---
     st.markdown("""
         <style>
-        /* Adaptabilité Dark/Light Mode */
         .stChatMessage {
             border-radius: 15px;
             padding: 15px;
@@ -83,21 +82,20 @@ def main():
             margin-bottom: 15px;
             background-color: rgba(128, 128, 128, 0.05);
         }
-        /* Style des boutons de suggestions */
         .stButton>button {
-            border-radius: 10px;
+            border-radius: 8px;
             border: 1px solid #4CAF50;
             color: #4CAF50;
             background-color: transparent;
-            transition: all 0.3s;
+            font-size: 0.85rem;
+            height: auto;
+            padding-top: 10px;
+            padding-bottom: 10px;
         }
         .stButton>button:hover {
             background-color: #4CAF50;
             color: white;
-        }
-        /* Amélioration contraste sidebar */
-        section[data-testid="stSidebar"] {
-            background-color: rgba(20, 20, 20, 0.1);
+            border-color: #4CAF50;
         }
         </style>
         """, unsafe_allow_html=True)
@@ -105,9 +103,6 @@ def main():
     # --- BARRE LATÉRALE ---
     with st.sidebar:
         st.title("🚀 Smix Academy")
-        with st.expander("📖 Mode d'emploi"):
-            st.write("1. Choisissez une thématique.\n2. Posez votre question ou utilisez les raccourcis.")
-
         st.divider()
         sujet = st.selectbox(
             "🎓 Thématique de formation :",
@@ -115,37 +110,44 @@ def main():
             index=None,
             placeholder="Sélectionnez un sujet"
         )
-
         if st.button("🗑️ Réinitialiser le Chat"):
             st.session_state.messages = []
             st.rerun()
 
-    # --- ZONE DE CHAT ---
     st.title("SmixBot Assistant 🤖")
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
     if sujet:
-        # --- BOUTONS RAPIDES (3-4 suggestions) ---
-        st.markdown(f"💡 *Suggestions pour : **{sujet}***")
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            if st.button("📚 Programme"):
-                st.session_state.temp_prompt = "Quels sont les modules du programme ?"
-        with c2:
-            if st.button("💰 Tarifs"):
-                st.session_state.temp_prompt = "Quel est le coût de la formation ?"
-        with c3:
-            if st.button("🗓️ Prochaine session"):
-                st.session_state.temp_prompt = "Quand commence la prochaine session ?"
+        st.markdown(f"💡 *Suggestions pour le thème **{sujet}*** :")
 
-        # Affichage de l'historique
+        # --- LOGIQUE DES BOUTONS DYNAMIQUES PAR CATÉGORIE ---
+        suggestions = []
+        if sujet == "Inscription":
+            suggestions = ["Comment s'inscrire ?", "Documents requis", "Dates limites", "Conditions d'admission"]
+        elif sujet == "Carrière":
+            suggestions = ["Débouchés métiers", "Aide au recrutement", "Stages", "Partenariats entreprises"]
+        elif sujet == "Paiement":
+            suggestions = ["Tarifs formation", "Modalités de paiement", "Bourses disponibles", "Remboursement"]
+        elif sujet == "Pédagogie":
+            suggestions = ["Programme détaillé", "Supports de cours", "Examens", "Projets pratiques"]
+        else:
+            suggestions = ["Plus d'infos", "Détails", "Questions fréquentes"]
+
+        # Affichage des boutons en colonnes
+        cols = st.columns(len(suggestions))
+        for i, option in enumerate(suggestions):
+            with cols[i]:
+                if st.button(option):
+                    st.session_state.temp_prompt = option
+
+        # Historique
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
-        # Gestion de l'input (Direct ou Bouton)
+        # Saisie
         prompt = st.chat_input("Posez votre question ici...")
 
         if "temp_prompt" in st.session_state:
@@ -158,13 +160,11 @@ def main():
                 st.markdown(prompt)
 
             with st.chat_message("assistant"):
-                # Indicateur visuel d'état
-                with st.status("🔍 SmixBot recherche l'information...", expanded=False) as status:
+                with st.status("🔍 Recherche en cours...", expanded=False) as status:
                     response = get_response(prompt, sujet)
-                    time.sleep(0.8)  # Délai naturel
+                    time.sleep(0.6)
                     status.update(label="✅ Réponse trouvée", state="complete")
 
-                # Effet Streaming
                 placeholder = st.empty()
                 full_res = ""
                 for word in response.split():
@@ -175,7 +175,8 @@ def main():
 
             st.session_state.messages.append({"role": "assistant", "content": response})
     else:
-        st.info("👋 Bonjour ! Pour commencer, sélectionnez une **thématique** dans la barre latérale de gauche.")
+        st.info(
+            "👋 Bonjour ! Sélectionnez une **thématique** dans la barre latérale pour activer les suggestions et discuter.")
 
 
 if __name__ == "__main__":
