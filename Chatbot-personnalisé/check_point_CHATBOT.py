@@ -5,24 +5,26 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import string
 import os
-import time  # Importé pour gérer le délai de réponse
+import time
+from PIL import Image  # Nécessaire pour le logo
 
-# --- INITIALISATION ---
-# Téléchargement des ressources NLTK nécessaires
+# --- INITIALISATION NLTK ---
 nltk.download('punkt')
 nltk.download('punkt_tab')
 nltk.download('stopwords')
 nltk.download('wordnet')
 nltk.download('averaged_perceptron_tagger')
 
-# 1. Chargement des données avec gestion du chemin universel
+# --- CONFIGURATION DES CHEMINS ---
+base_path = os.path.dirname(__file__)
+file_path = os.path.join(base_path, "question.txt")
+# Chemin mis à jour vers le dossier "Asset"
+logo_path = os.path.join(base_path, "Asset", "logo Smix-transparent.png")
+
+# 1. Chargement des données
 qa_data = []
 all_categories = set()
 HIDDEN_CATEGORIES = ["Salutations", "Aide"]
-
-# Détection automatique du dossier pour trouver question.txt
-base_path = os.path.dirname(__file__)
-file_path = os.path.join(base_path, "question.txt")
 
 try:
     with open(file_path, 'r', encoding='utf-8') as f:
@@ -34,10 +36,10 @@ try:
                 if cat not in HIDDEN_CATEGORIES:
                     all_categories.add(cat)
 except FileNotFoundError:
-    st.error("Erreur : Le fichier 'question.txt' est introuvable sur le serveur.")
+    st.error("Fichier 'question.txt' introuvable.")
 
 
-# 2. Fonction de Prétraitement
+# 2. Prétraitement
 def preprocess(sentence):
     words = word_tokenize(sentence.lower())
     stop_words = set(stopwords.words('english'))
@@ -46,14 +48,14 @@ def preprocess(sentence):
     return [lemmatizer.lemmatize(w) for w in words]
 
 
-# 3. Logique de recherche
+# 3. Logique de réponse
 def get_response(query, selected_category):
     query_tokens = preprocess(query)
     if not query_tokens:
         return "Je vous écoute, n'hésitez pas à poser une question précise."
 
     max_similarity = -1
-    best_response = "Désolé, je n'ai pas trouvé de réponse précise. Essayez de reformuler ou changez de catégorie."
+    best_response = "Désolé, je n'ai pas trouvé de réponse précise. Essayez de reformuler."
 
     target_categories = [selected_category] + HIDDEN_CATEGORIES
     filtered_data = [item for item in qa_data if item['categorie'] in target_categories]
@@ -62,24 +64,28 @@ def get_response(query, selected_category):
         item_tokens = preprocess(item['question'])
         union = set(query_tokens).union(item_tokens)
         if not union: continue
-
         similarity = len(set(query_tokens).intersection(item_tokens)) / float(len(union))
         if similarity > max_similarity and similarity > 0.1:
             max_similarity = similarity
             best_response = item['reponse']
-
     return best_response
 
 
-# 4. INTERFACE STREAMLIT
+# 4. INTERFACE PRINCIPALE
 def main():
     st.set_page_config(page_title="SmixBot", page_icon="🤖")
-    st.title("SmixBot 🤖")
 
+    # --- BARRE LATÉRALE ---
     with st.sidebar:
-        st.header("Configuration")
-        st.write("Choisissez un thème pour orienter la discussion.")
+        # Affichage du Logo
+        try:
+            image = Image.open(logo_path)
+            st.image(image, use_container_width=True)
+        except Exception:
+            st.title("🚀 Smix Academy")
 
+        st.divider()
+        st.header("Configuration")
         sujet = st.selectbox(
             "Sujet de la formation :",
             options=sorted(list(all_categories)),
@@ -91,44 +97,46 @@ def main():
             st.session_state.messages = []
             st.rerun()
 
-    # Initialisation de l'historique
+    # --- ZONE DE CHAT ---
+    st.title("SmixBot 🤖")
+
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # Affichage du chat
     if sujet:
-        st.info(f"📍 Sujet actuel : **{sujet}**")
+        st.info(f"📍 Discussion sur : **{sujet}**")
 
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
         if prompt := st.chat_input("Posez votre question..."):
-            # Affichage immédiat du message utilisateur
+            # Message utilisateur
             st.session_state.messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
 
-            # Calcul de la réponse en arrière-plan
-            response = get_response(prompt, sujet)
-
-            # --- EFFET DE RÉFLEXION ---
+            # Message de l'assistant avec effet Streaming
             with st.chat_message("assistant"):
+                response = get_response(prompt, sujet)
+
+                # Simulation du mode "Mot par Mot"
                 placeholder = st.empty()
-                # On affiche un curseur clignotant pendant l'attente
-                placeholder.markdown("● *SmixBot réfléchit...*")
+                full_response = ""
 
-                # Calcul du délai proportionnel (min 2s, max 4s)
-                delay = min(max(len(response) * 0.03, 2), 4)
-                time.sleep(delay)
+                # On divise la réponse en mots
+                for word in response.split():
+                    full_response += word + " "
+                    # On affiche le texte partiel avec un curseur
+                    placeholder.markdown(full_response + "▌")
+                    time.sleep(0.08)  # Vitesse de l'écriture
 
-                # Affichage de la réponse finale
-                placeholder.markdown(response)
+                # Affichage final sans le curseur
+                placeholder.markdown(full_response)
 
             st.session_state.messages.append({"role": "assistant", "content": response})
     else:
-        st.warning("👈 Veuillez sélectionner une catégorie dans la barre latérale.")
-        st.write("SmixBot est prêt à vous aider sur vos thèmes de formation.")
+        st.warning("👈 Veuillez sélectionner une catégorie pour commencer.")
 
 
 if __name__ == "__main__":
