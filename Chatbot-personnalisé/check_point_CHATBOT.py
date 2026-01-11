@@ -24,34 +24,43 @@ COULEUR_INDIGO = "#4F46E5"
 
 
 # --- CHARGEMENT DES DONNÉES DEPUIS GOOGLE SHEETS ---
-@st.cache_data(ttl=600)  # Mise à jour du cache toutes les 10 minutes
+@st.cache_data(ttl=300)
 def load_data_from_sheets(url):
     try:
         response = requests.get(url)
         response.raise_for_status()
-        # Lecture du CSV via pandas
         df = pd.read_csv(io.StringIO(response.text))
 
-        # Nettoyage des colonnes (pour éviter les problèmes d'espaces ou de casse)
-        df.columns = [c.strip().lower() for c in df.columns]
+        # Normalisation des noms de colonnes pour éviter l'erreur 'catégorie'
+        # On remplace les accents et on met en minuscules
+        df.columns = [
+            c.strip().lower().replace('é', 'e').replace('à', 'a')
+            for c in df.columns
+        ]
 
         qa_list = []
         categories = set()
         HIDDEN_CATEGORIES = ["salutations", "aide"]
 
-        for _, row in df.iterrows():
-            # On attend les colonnes : catégorie, question, réponse
-            cat = str(row['catégorie']).strip()
-            ques = str(row['question']).strip()
-            rep = str(row['réponse']).strip()
+        # Mapping flexible des noms de colonnes
+        col_cat = 'categorie' if 'categorie' in df.columns else df.columns[0]
+        col_ques = 'question' if 'question' in df.columns else df.columns[1]
+        col_rep = 'reponse' if 'reponse' in df.columns else ('reponse' if 'reponse' in df.columns else df.columns[2])
 
-            qa_list.append({'categorie': cat, 'question': ques, 'reponse': rep})
-            if cat.lower() not in HIDDEN_CATEGORIES:
-                categories.add(cat)
+        for _, row in df.iterrows():
+            cat = str(row[col_cat]).strip()
+            ques = str(row[col_ques]).strip()
+            rep = str(row[col_rep]).strip()
+
+            if cat.lower() != "nan" and ques.lower() != "nan":
+                qa_list.append({'categorie': cat, 'question': ques, 'reponse': rep})
+                if cat.lower() not in HIDDEN_CATEGORIES:
+                    categories.add(cat)
 
         return qa_list, sorted(list(categories))
     except Exception as e:
-        st.error(f"Erreur de connexion à la base de données Google Sheets : {e}")
+        st.error(f"⚠️ Erreur de lecture : Vérifiez que vos colonnes Sheets sont 'Catégorie', 'Question', 'Réponse'.")
+        st.info(f"Détail technique : {e}")
         return [], []
 
 
@@ -61,7 +70,8 @@ qa_data, all_categories = load_data_from_sheets(CSV_URL)
 # --- FONCTIONS LOGIQUES ---
 def preprocess(sentence):
     words = word_tokenize(sentence.lower())
-    stop_words = set(stopwords.words('french'))  # Passage en français pour Smix
+    # Utilisation des stopwords français
+    stop_words = set(stopwords.words('french'))
     words = [w for w in words if w not in stop_words and w not in string.punctuation]
     lemmatizer = WordNetLemmatizer()
     return [lemmatizer.lemmatize(w) for w in words]
@@ -70,9 +80,9 @@ def preprocess(sentence):
 def get_local_response(query, selected_category):
     query_tokens = preprocess(query)
     max_similarity = -1
+    # [cite_start]Réponse basée sur le script de vente en cas d'échec [cite: 25, 57]
     best_response = "Désolé, je n'ai pas la réponse exacte. Mais notre équipe est disponible immédiatement sur WhatsApp pour vous aider !"
 
-    # On cherche dans la catégorie sélectionnée + Salutations et Aide
     target_cats = [selected_category.lower(), "salutations", "aide"]
     filtered_data = [item for item in qa_data if item['categorie'].lower() in target_cats]
 
@@ -91,7 +101,6 @@ def get_local_response(query, selected_category):
 def main():
     st.set_page_config(page_title="Smix Sales Assistant", page_icon="🤖", layout="centered")
 
-    # CSS : Design Indigo et Bouton CTA Premium
     st.markdown(f"""
         <style>
         .stApp {{ background-color: #F8F9FE; }}
@@ -104,13 +113,13 @@ def main():
         }}
         .stButton>button:hover {{ background-color: {COULEUR_INDIGO}; color: white; }}
 
-        .btn-container {{ display: flex; justify-content: flex-end; margin-top: 25px; margin-bottom: 15px; margin-right: 25px; }}
+        .btn-container {{ display: flex; justify-content: flex-end; margin-top: 25px; margin-right: 25px; }}
         .cta-whatsapp {{
             background-color: #25D366; color: white !important; padding: 12px 24px; border-radius: 50px;
             text-decoration: none !important; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 10px;
             box-shadow: 0 4px 15px rgba(37, 211, 102, 0.2); transition: all 0.3s ease;
         }}
-        .cta-whatsapp:hover {{ transform: scale(1.05); box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4); }}
+        .cta-whatsapp:hover {{ transform: scale(1.05); text-decoration: none !important; }}
         </style>
         """, unsafe_allow_html=True)
 
@@ -130,19 +139,19 @@ def main():
         st.session_state.messages = []
 
     if sujet:
-        # Suggestions basées sur les catégories (dynamique ou statique)
+        # [cite_start]Configuration des suggestions dynamiques selon le script de vente [cite: 5, 23, 34]
         suggestions = {
-            "Inscription": ["Comment s'inscrire ?", "Documents requis", "Dates limites", "Conditions d'admission"],
-            "Carrière": ["Débouchés métiers", "Aide au recrutement", "Stages", "Partenariats entreprises"],
-            "Paiement": ["Tarifs formation", "Modalités de paiement", "Bourses disponibles", "Remboursement"],
-            "Pédagogie": ["Programme détaillé", "Supports de cours", "Examens", "Projets pratiques"]
+            "Inscription": ["Comment s'inscrire ?", "Dates limites", "Documents requis"],
+            "Paiement": ["Tarifs formation", "Modalités de paiement", "Est-ce trop cher ?"],
+            "Carrière": ["Débouchés métiers", "Certificat reconnu ?", "Aide au recrutement"],
+            "Pédagogie": ["Programme détaillé", "Formation en ligne ?", "Accompagnement pratique"]
         }
 
-        st.write("💡 **Actions recommandées :**")
-        opts = suggestions.get(sujet, [])
-        cols = st.columns(2)
+        st.write("💡 **Questions fréquentes :**")
+        opts = suggestions.get(sujet, ["En savoir plus"])
+        cols = st.columns(len(opts))
         for i, opt in enumerate(opts):
-            with cols[i % 2]:
+            with cols[i]:
                 if st.button(opt, use_container_width=True):
                     st.session_state.temp_prompt = opt
 
@@ -170,8 +179,8 @@ def main():
                     time.sleep(0.02)
                 placeholder.markdown(full_res)
 
-                # --- GÉNÉRATION LIEN WHATSAPP DYNAMIQUE ---
-                msg_wa = f"Bonjour Smix Academy ! Je m'intéresse à la formation {sujet}. J'ai une question concernant : {prompt}"
+                # [cite_start]Lien WhatsApp avec message pré-rempli [cite: 2, 25]
+                msg_wa = f"Bonjour Smix Academy ! Je m'intéresse à la formation {sujet}. J'ai une question : {prompt}"
                 msg_encoded = urllib.parse.quote(msg_wa)
                 lien_wa_complet = f"https://wa.me/{NUMERO_WA}?text={msg_encoded}"
 
@@ -188,7 +197,7 @@ def main():
 
             st.session_state.messages.append({"role": "assistant", "content": response})
     else:
-        st.info("👋 Sélectionnez une thématique pour poser vos questions à l'assistant.")
+        st.info("👋 Bonjour ! Pour commencer, choisissez une thématique dans la barre latérale.")
 
 
 if __name__ == "__main__":
