@@ -1,10 +1,12 @@
 import streamlit as st
 import nltk
+import pandas as pd
+import requests
+import io
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import string
-import os
 import time
 import urllib.parse
 
@@ -15,35 +17,51 @@ nltk.download('stopwords')
 nltk.download('wordnet')
 
 # --- CONFIGURATION ---
+CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1g6r2EAc7-KgGDkkMTULS_Vl2AFx50QVQjCaHeyuhHOIFLtug4KPaq6aMYiMAQfWh6_dFzr5LO00L/pub?gid=0&single=true&output=csv"
 NUMERO_WA = "237679648336"
 LIEN_CALENDAR = "https://calendar.app.google/DgFJZkPYehjGzLUD8"
 COULEUR_INDIGO = "#4F46E5"
 
-# --- CHARGEMENT DES DONNÉES ---
-base_path = os.path.dirname(__file__)
-file_path = os.path.join(base_path, "question.txt")
 
-qa_data = []
-all_categories = set()
-HIDDEN_CATEGORIES = ["Salutations", "Aide"]
+# --- CHARGEMENT DES DONNÉES DEPUIS GOOGLE SHEETS ---
+@st.cache_data(ttl=600)  # Mise à jour du cache toutes les 10 minutes
+def load_data_from_sheets(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        # Lecture du CSV via pandas
+        df = pd.read_csv(io.StringIO(response.text))
 
-try:
-    with open(file_path, 'r', encoding='utf-8') as f:
-        for line in f:
-            parts = line.strip().split(',', 2)
-            if len(parts) == 3:
-                cat, ques, rep = parts
-                qa_data.append({'categorie': cat, 'question': ques, 'reponse': rep})
-                if cat not in HIDDEN_CATEGORIES:
-                    all_categories.add(cat)
-except FileNotFoundError:
-    st.error("Fichier question.txt introuvable.")
+        # Nettoyage des colonnes (pour éviter les problèmes d'espaces ou de casse)
+        df.columns = [c.strip().lower() for c in df.columns]
+
+        qa_list = []
+        categories = set()
+        HIDDEN_CATEGORIES = ["salutations", "aide"]
+
+        for _, row in df.iterrows():
+            # On attend les colonnes : catégorie, question, réponse
+            cat = str(row['catégorie']).strip()
+            ques = str(row['question']).strip()
+            rep = str(row['réponse']).strip()
+
+            qa_list.append({'categorie': cat, 'question': ques, 'reponse': rep})
+            if cat.lower() not in HIDDEN_CATEGORIES:
+                categories.add(cat)
+
+        return qa_list, sorted(list(categories))
+    except Exception as e:
+        st.error(f"Erreur de connexion à la base de données Google Sheets : {e}")
+        return [], []
+
+
+qa_data, all_categories = load_data_from_sheets(CSV_URL)
 
 
 # --- FONCTIONS LOGIQUES ---
 def preprocess(sentence):
     words = word_tokenize(sentence.lower())
-    stop_words = set(stopwords.words('english'))
+    stop_words = set(stopwords.words('french'))  # Passage en français pour Smix
     words = [w for w in words if w not in stop_words and w not in string.punctuation]
     lemmatizer = WordNetLemmatizer()
     return [lemmatizer.lemmatize(w) for w in words]
@@ -54,8 +72,9 @@ def get_local_response(query, selected_category):
     max_similarity = -1
     best_response = "Désolé, je n'ai pas la réponse exacte. Mais notre équipe est disponible immédiatement sur WhatsApp pour vous aider !"
 
-    target_categories = [selected_category] + HIDDEN_CATEGORIES
-    filtered_data = [item for item in qa_data if item['categorie'] in target_categories]
+    # On cherche dans la catégorie sélectionnée + Salutations et Aide
+    target_cats = [selected_category.lower(), "salutations", "aide"]
+    filtered_data = [item for item in qa_data if item['categorie'].lower() in target_cats]
 
     for item in filtered_data:
         item_tokens = preprocess(item['question'])
@@ -72,57 +91,26 @@ def get_local_response(query, selected_category):
 def main():
     st.set_page_config(page_title="Smix Sales Assistant", page_icon="🤖", layout="centered")
 
-    # CSS : Design Indigo et Bouton CTA avec marge à droite augmentée
+    # CSS : Design Indigo et Bouton CTA Premium
     st.markdown(f"""
         <style>
         .stApp {{ background-color: #F8F9FE; }}
-
-        .indigo-text {{ 
-            color: {COULEUR_INDIGO} !important; 
-            font-weight: 800; 
-            margin-bottom: 20px;
-        }}
-
+        .indigo-text {{ color: {COULEUR_INDIGO} !important; font-weight: 800; margin-bottom: 20px; }}
         .stChatMessage {{ border-radius: 15px; background-color: white; border: 1px solid #E0E4F5; }}
 
         .stButton>button {{ 
-            border-radius: 10px; 
-            border: 1px solid {COULEUR_INDIGO}; 
-            color: {COULEUR_INDIGO}; 
-            background-color: white;
-            font-weight: 600;
+            border-radius: 10px; border: 1px solid {COULEUR_INDIGO}; color: {COULEUR_INDIGO}; 
+            background-color: white; font-weight: 600;
         }}
-        .stButton>button:hover {{ 
-            background-color: {COULEUR_INDIGO}; 
-            color: white; 
-        }}
+        .stButton>button:hover {{ background-color: {COULEUR_INDIGO}; color: white; }}
 
-        /* Bouton CTA WhatsApp avec marge droite augmentée */
-        .btn-container {{
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 25px;
-            margin-bottom: 15px;
-            margin-right: 20px; /* Augmentation du margin right */
-        }}
+        .btn-container {{ display: flex; justify-content: flex-end; margin-top: 25px; margin-bottom: 15px; margin-right: 25px; }}
         .cta-whatsapp {{
-            background-color: #25D366;
-            color: white !important;
-            padding: 12px 24px;
-            border-radius: 50px;
-            text-decoration: none !important;
-            font-weight: bold;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.2);
-            transition: all 0.3s ease;
+            background-color: #25D366; color: white !important; padding: 12px 24px; border-radius: 50px;
+            text-decoration: none !important; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.2); transition: all 0.3s ease;
         }}
-        .cta-whatsapp:hover {{
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
-        }}
+        .cta-whatsapp:hover {{ transform: scale(1.05); box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4); }}
         </style>
         """, unsafe_allow_html=True)
 
@@ -131,7 +119,7 @@ def main():
         st.link_button("🟢 Parler à un conseiller", f"https://wa.me/{NUMERO_WA}", use_container_width=True)
         st.link_button("📅 Prendre un RDV", LIEN_CALENDAR, use_container_width=True)
         st.divider()
-        sujet = st.selectbox("🎯 Quelle thématique vous intéresse ?", options=sorted(list(all_categories)), index=None)
+        sujet = st.selectbox("🎯 Quelle thématique vous intéresse ?", options=all_categories, index=None)
         if st.button("🗑️ Réinitialiser le Chat"):
             st.session_state.messages = []
             st.rerun()
@@ -142,6 +130,7 @@ def main():
         st.session_state.messages = []
 
     if sujet:
+        # Suggestions basées sur les catégories (dynamique ou statique)
         suggestions = {
             "Inscription": ["Comment s'inscrire ?", "Documents requis", "Dates limites", "Conditions d'admission"],
             "Carrière": ["Débouchés métiers", "Aide au recrutement", "Stages", "Partenariats entreprises"],
@@ -158,10 +147,9 @@ def main():
                     st.session_state.temp_prompt = opt
 
         for msg in st.session_state.messages:
-            with st.chat_message(msg["role"]):
-                st.markdown(msg["content"])
+            with st.chat_message(msg["role"]): st.markdown(msg["content"])
 
-        prompt = st.chat_input("Posez votre question à l'assistant...")
+        prompt = st.chat_input("Posez votre question...")
         if "temp_prompt" in st.session_state:
             prompt = st.session_state.temp_prompt
             del st.session_state.temp_prompt
@@ -179,11 +167,11 @@ def main():
                 for word in response.split():
                     full_res += word + " "
                     placeholder.markdown(full_res + "▌")
-                    time.sleep(0.03)
+                    time.sleep(0.02)
                 placeholder.markdown(full_res)
 
-                # --- GÉNÉRATION DU LIEN WA AVEC TEXTE PRÉ-REMPLI ---
-                msg_wa = f"Bonjour Smix Academy ! Je m'intéresse à la formation en FullStack Community Management . J'ai une question concernant : {prompt}"
+                # --- GÉNÉRATION LIEN WHATSAPP DYNAMIQUE ---
+                msg_wa = f"Bonjour Smix Academy ! Je m'intéresse à la formation {sujet}. J'ai une question concernant : {prompt}"
                 msg_encoded = urllib.parse.quote(msg_wa)
                 lien_wa_complet = f"https://wa.me/{NUMERO_WA}?text={msg_encoded}"
 
@@ -200,7 +188,7 @@ def main():
 
             st.session_state.messages.append({"role": "assistant", "content": response})
     else:
-        st.info("👋 Bonjour ! Sélectionnez une thématique dans la barre latérale pour activer l'assistant de vente.")
+        st.info("👋 Sélectionnez une thématique pour poser vos questions à l'assistant.")
 
 
 if __name__ == "__main__":
