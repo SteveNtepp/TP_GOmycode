@@ -6,7 +6,6 @@ from nltk.stem import WordNetLemmatizer
 import string
 import os
 import time
-from PIL import Image
 
 # --- INITIALISATION NLTK ---
 nltk.download('punkt')
@@ -18,7 +17,6 @@ nltk.download('averaged_perceptron_tagger')
 # --- CONFIGURATION DES CHEMINS ---
 base_path = os.path.dirname(__file__)
 file_path = os.path.join(base_path, "question.txt")
-logo_path = os.path.join(base_path, "Asset", "logo Smix-transparent.png")
 
 # 1. Chargement des données
 qa_data = []
@@ -35,10 +33,10 @@ try:
                 if cat not in HIDDEN_CATEGORIES:
                     all_categories.add(cat)
 except FileNotFoundError:
-    st.error("Fichier 'question.txt' introuvable.")
+    st.error("Fichier 'question.txt' introuvable sur le serveur.")
 
 
-# 2. Prétraitement
+# 2. Prétraitement du texte
 def preprocess(sentence):
     words = word_tokenize(sentence.lower())
     stop_words = set(stopwords.words('english'))
@@ -54,7 +52,7 @@ def get_response(query, selected_category):
         return "Je vous écoute, n'hésitez pas à poser une question précise."
 
     max_similarity = -1
-    best_response = "Désolé, je n'ai pas trouvé de réponse précise. Essayez de reformuler."
+    best_response = "Désolé, je n'ai pas trouvé de réponse précise. Essayez de reformuler ou changez de thématique."
 
     target_categories = [selected_category] + HIDDEN_CATEGORIES
     filtered_data = [item for item in qa_data if item['categorie'] in target_categories]
@@ -76,15 +74,10 @@ def main():
 
     # --- BARRE LATÉRALE ---
     with st.sidebar:
-        # Affichage du Logo REDIMENSIONNÉ
-        try:
-            image = Image.open(logo_path)
-            # Nous avons retiré use_container_width et fixé la largeur à 150
-            st.image(image, width=150)
-        except Exception:
-            st.title("🚀 Smix Academy")
-
+        st.title("🚀 Smix Academy")
+        st.write("Bienvenue sur votre assistant de formation.")
         st.divider()
+
         st.header("Configuration")
         sujet = st.selectbox(
             "Sujet de la formation :",
@@ -104,33 +97,36 @@ def main():
         st.session_state.messages = []
 
     if sujet:
-        st.info(f"📍 Discussion sur : **{sujet}**")
+        st.info(f"📍 Sujet sélectionné : **{sujet}**")
 
+        # Affichage de l'historique
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
-        if prompt := st.chat_input("Posez votre question..."):
+        # Saisie utilisateur
+        if prompt := st.chat_input("Posez votre question ici..."):
             st.session_state.messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
 
+            # Réponse de l'assistant avec effet Streaming
             with st.chat_message("assistant"):
                 response = get_response(prompt, sujet)
                 placeholder = st.empty()
                 full_response = ""
 
-                # Effet Streaming (Mot par mot)
+                # Effet d'écriture mot par mot
                 for word in response.split():
                     full_response += word + " "
                     placeholder.markdown(full_response + "▌")
-                    time.sleep(0.08)
+                    time.sleep(0.06)  # Vitesse ajustable
 
                 placeholder.markdown(full_response)
 
             st.session_state.messages.append({"role": "assistant", "content": response})
     else:
-        st.warning("👈 Veuillez sélectionner une catégorie pour commencer.")
+        st.warning("👈 Veuillez sélectionner un sujet dans la barre latérale pour activer le chat.")
 
 
 if __name__ == "__main__":
