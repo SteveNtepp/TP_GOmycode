@@ -5,11 +5,12 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import string
 import os
+import time  # Importé pour gérer le délai de réponse
 
 # --- INITIALISATION ---
 # Téléchargement des ressources NLTK nécessaires
 nltk.download('punkt')
-nltk.download('punkt_tab')  # CRUCIAL : Résout l'erreur LookupError sur Streamlit Cloud
+nltk.download('punkt_tab')
 nltk.download('stopwords')
 nltk.download('wordnet')
 nltk.download('averaged_perceptron_tagger')
@@ -19,7 +20,7 @@ qa_data = []
 all_categories = set()
 HIDDEN_CATEGORIES = ["Salutations", "Aide"]
 
-# Détection automatique du dossier du script pour trouver question.txt
+# Détection automatique du dossier pour trouver question.txt
 base_path = os.path.dirname(__file__)
 file_path = os.path.join(base_path, "question.txt")
 
@@ -33,18 +34,19 @@ try:
                 if cat not in HIDDEN_CATEGORIES:
                     all_categories.add(cat)
 except FileNotFoundError:
-    st.error("Erreur : Le fichier 'question.txt' est introuvable dans le dépôt GitHub.")
+    st.error("Erreur : Le fichier 'question.txt' est introuvable sur le serveur.")
+
 
 # 2. Fonction de Prétraitement
 def preprocess(sentence):
     words = word_tokenize(sentence.lower())
-    # Utilisation de stopwords en anglais comme dans votre script original
     stop_words = set(stopwords.words('english'))
     words = [w for w in words if w not in stop_words and w not in string.punctuation]
     lemmatizer = WordNetLemmatizer()
     return [lemmatizer.lemmatize(w) for w in words]
 
-# 3. Logique de recherche (Hybride : Catégorie choisie + Salutations/Aide)
+
+# 3. Logique de recherche
 def get_response(query, selected_category):
     query_tokens = preprocess(query)
     if not query_tokens:
@@ -53,7 +55,6 @@ def get_response(query, selected_category):
     max_similarity = -1
     best_response = "Désolé, je n'ai pas trouvé de réponse précise. Essayez de reformuler ou changez de catégorie."
 
-    # Recherche étendue à la catégorie choisie + messages de base (salutations/aide)
     target_categories = [selected_category] + HIDDEN_CATEGORIES
     filtered_data = [item for item in qa_data if item['categorie'] in target_categories]
 
@@ -68,6 +69,7 @@ def get_response(query, selected_category):
             best_response = item['reponse']
 
     return best_response
+
 
 # 4. INTERFACE STREAMLIT
 def main():
@@ -89,7 +91,7 @@ def main():
             st.session_state.messages = []
             st.rerun()
 
-    # Initialisation de l'historique dans le session_state
+    # Initialisation de l'historique
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
@@ -102,18 +104,32 @@ def main():
                 st.markdown(message["content"])
 
         if prompt := st.chat_input("Posez votre question..."):
+            # Affichage immédiat du message utilisateur
             st.session_state.messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
 
+            # Calcul de la réponse en arrière-plan
             response = get_response(prompt, sujet)
 
-            st.session_state.messages.append({"role": "assistant", "content": response})
+            # --- EFFET DE RÉFLEXION ---
             with st.chat_message("assistant"):
-                st.markdown(response)
+                placeholder = st.empty()
+                # On affiche un curseur clignotant pendant l'attente
+                placeholder.markdown("● *SmixBot réfléchit...*")
+
+                # Calcul du délai proportionnel (min 2s, max 4s)
+                delay = min(max(len(response) * 0.03, 2), 4)
+                time.sleep(delay)
+
+                # Affichage de la réponse finale
+                placeholder.markdown(response)
+
+            st.session_state.messages.append({"role": "assistant", "content": response})
     else:
         st.warning("👈 Veuillez sélectionner une catégorie dans la barre latérale.")
-        st.write("SmixBot répondra à vos questions sur les formations une fois le sujet choisi.")
+        st.write("SmixBot est prêt à vous aider sur vos thèmes de formation.")
+
 
 if __name__ == "__main__":
     main()
