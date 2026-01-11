@@ -18,6 +18,10 @@ nltk.download('averaged_perceptron_tagger')
 base_path = os.path.dirname(__file__)
 file_path = os.path.join(base_path, "question.txt")
 
+# --- CONFIGURATION WHATSAPP ---
+NUMERO_WA = "23767964336"
+LIEN_WA = f"https://wa.me/{NUMERO_WA}?text=Bonjour%20Smix%20Academy,%20j'aimerais%20en%20savoir%20plus%20sur%20vos%20formations."
+
 # 1. Chargement des données
 qa_data = []
 all_categories = set()
@@ -52,7 +56,7 @@ def get_response(query, selected_category):
         return "Je vous écoute, n'hésitez pas à poser une question précise."
 
     max_similarity = -1
-    best_response = "Désolé, je n'ai pas trouvé de réponse précise pour ce sujet. Pouvez-vous reformuler ?"
+    best_response = "Désolé, je n'ai pas trouvé de réponse précise. Pouvez-vous reformuler ou contacter un conseiller ?"
 
     target_categories = [selected_category] + HIDDEN_CATEGORIES
     filtered_data = [item for item in qa_data if item['categorie'] in target_categories]
@@ -72,37 +76,24 @@ def get_response(query, selected_category):
 def main():
     st.set_page_config(page_title="SmixBot Pro", page_icon="🤖", layout="centered")
 
-    # --- CSS PERSONNALISÉ (DARK MODE FRIENDLY) ---
+    # --- CSS PERSONNALISÉ ---
     st.markdown("""
         <style>
-        .stChatMessage {
-            border-radius: 15px;
-            padding: 15px;
-            border: 1px solid rgba(128, 128, 128, 0.2);
-            margin-bottom: 15px;
-            background-color: rgba(128, 128, 128, 0.05);
-        }
-        .stButton>button {
-            border-radius: 8px;
-            border: 1px solid #4CAF50;
-            color: #4CAF50;
-            background-color: transparent;
-            font-size: 0.85rem;
-            height: auto;
-            padding-top: 10px;
-            padding-bottom: 10px;
-        }
-        .stButton>button:hover {
-            background-color: #4CAF50;
-            color: white;
-            border-color: #4CAF50;
-        }
+        .stChatMessage { border-radius: 15px; padding: 15px; border: 1px solid rgba(128,128,128,0.2); margin-bottom: 15px; background-color: rgba(128,128,128,0.05); }
+        .stButton>button { border-radius: 8px; border: 1px solid #4CAF50; color: #4CAF50; background-color: transparent; font-size: 0.85rem; }
+        .stButton>button:hover { background-color: #4CAF50; color: white; }
+        /* Style spécial pour le bouton WhatsApp */
+        div[data-testid="stMarkdownContainer"] > p > a > button { background-color: #25D366 !important; color: white !important; border: none !important; }
         </style>
         """, unsafe_allow_html=True)
 
     # --- BARRE LATÉRALE ---
     with st.sidebar:
         st.title("🚀 Smix Academy")
+
+        # Bouton WhatsApp permanent dans la sidebar
+        st.link_button("🟢 Parler à un conseiller", LIEN_WA, use_container_width=True)
+
         st.divider()
         sujet = st.selectbox(
             "🎓 Thématique de formation :",
@@ -120,29 +111,26 @@ def main():
         st.session_state.messages = []
 
     if sujet:
-        st.markdown(f"💡 *Suggestions pour le thème **{sujet}*** :")
+        st.markdown(f"💡 *Suggestions pour **{sujet}*** :")
 
-        # --- LOGIQUE DES BOUTONS DYNAMIQUES PAR CATÉGORIE ---
+        # Suggestions dynamiques
         suggestions = []
         if sujet == "Inscription":
-            suggestions = ["Comment s'inscrire ?", "Documents requis", "Dates limites", "Conditions d'admission"]
+            suggestions = ["Comment s'inscrire ?", "Documents requis", "Dates limites"]
         elif sujet == "Carrière":
-            suggestions = ["Débouchés métiers", "Aide au recrutement", "Stages", "Partenariats entreprises"]
+            suggestions = ["Débouchés métiers", "Aide au recrutement", "Stages"]
         elif sujet == "Paiement":
-            suggestions = ["Tarifs formation", "Modalités de paiement", "Bourses disponibles", "Remboursement"]
+            suggestions = ["Tarifs formation", "Modalités de paiement", "Bourses disponibles"]
         elif sujet == "Pédagogie":
-            suggestions = ["Programme détaillé", "Supports de cours", "Examens", "Projets pratiques"]
-        else:
-            suggestions = ["Plus d'infos", "Détails", "Questions fréquentes"]
+            suggestions = ["Programme détaillé", "Supports de cours", "Projets pratiques"]
 
-        # Affichage des boutons en colonnes
         cols = st.columns(len(suggestions))
         for i, option in enumerate(suggestions):
             with cols[i]:
                 if st.button(option):
                     st.session_state.temp_prompt = option
 
-        # Historique
+        # Affichage historique
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
@@ -170,13 +158,18 @@ def main():
                 for word in response.split():
                     full_res += word + " "
                     placeholder.markdown(full_res + "▌")
-                    time.sleep(0.05)
+                    time.sleep(0.04)
                 placeholder.markdown(full_res)
+
+                # Petit rappel WhatsApp après les réponses d'aide ou de paiement
+                if sujet in ["Paiement", "Inscription"]:
+                    st.caption("Besoin d'une assistance immédiate ?")
+                    st.link_button("💬 Finaliser sur WhatsApp", LIEN_WA)
 
             st.session_state.messages.append({"role": "assistant", "content": response})
     else:
-        st.info(
-            "👋 Bonjour ! Sélectionnez une **thématique** dans la barre latérale pour activer les suggestions et discuter.")
+        st.info("👋 Bonjour ! Sélectionnez une **thématique** à gauche pour commencer.")
+        st.link_button("📞 Nous contacter directement", LIEN_WA)
 
 
 if __name__ == "__main__":
