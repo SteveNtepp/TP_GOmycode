@@ -18,9 +18,10 @@ nltk.download('averaged_perceptron_tagger')
 base_path = os.path.dirname(__file__)
 file_path = os.path.join(base_path, "question.txt")
 
-# --- CONFIGURATION WHATSAPP ---
-NUMERO_WA = "237679648336"
+# --- CONFIGURATION EXTERNE ---
+NUMERO_WA = "23767964336"
 LIEN_WA = f"https://wa.me/{NUMERO_WA}?text=Bonjour%20Smix%20Academy,%20j'aimerais%20en%20savoir%20plus%20sur%20vos%20formations."
+LIEN_CALENDAR = "https://calendar.app.google/DgFJZkPYehjGzLUD8"
 
 # 1. Chargement des données
 qa_data = []
@@ -56,7 +57,7 @@ def get_response(query, selected_category):
         return "Je vous écoute, n'hésitez pas à poser une question précise."
 
     max_similarity = -1
-    best_response = "Désolé, je n'ai pas trouvé de réponse précise. Pouvez-vous reformuler ou contacter un conseiller ?"
+    best_response = "Désolé, je n'ai pas trouvé de réponse précise. Pouvez-vous reformuler ou prendre un RDV avec nous ?"
 
     target_categories = [selected_category] + HIDDEN_CATEGORIES
     filtered_data = [item for item in qa_data if item['categorie'] in target_categories]
@@ -82,8 +83,10 @@ def main():
         .stChatMessage { border-radius: 15px; padding: 15px; border: 1px solid rgba(128,128,128,0.2); margin-bottom: 15px; background-color: rgba(128,128,128,0.05); }
         .stButton>button { border-radius: 8px; border: 1px solid #4CAF50; color: #4CAF50; background-color: transparent; font-size: 0.85rem; }
         .stButton>button:hover { background-color: #4CAF50; color: white; }
-        /* Style spécial pour le bouton WhatsApp */
-        div[data-testid="stMarkdownContainer"] > p > a > button { background-color: #25D366 !important; color: white !important; border: none !important; }
+        /* Style spécial pour WhatsApp (Vert) */
+        .wa-button button { background-color: #25D366 !important; color: white !important; border: none !important; }
+        /* Style spécial pour Calendar (Bleu Google) */
+        .cal-button button { background-color: #4285F4 !important; color: white !important; border: none !important; }
         </style>
         """, unsafe_allow_html=True)
 
@@ -91,8 +94,9 @@ def main():
     with st.sidebar:
         st.title("🚀 Smix Academy")
 
-        # Bouton WhatsApp permanent dans la sidebar
-        st.link_button("🟢 Parler à un conseiller", LIEN_WA, use_container_width=True)
+        # Boutons de contact permanents
+        st.link_button("🟢 Parler à un conseiller (WA)", LIEN_WA, use_container_width=True)
+        st.link_button("📅 Prendre un RDV (Calendar)", LIEN_CALENDAR, use_container_width=True)
 
         st.divider()
         sujet = st.selectbox(
@@ -113,22 +117,25 @@ def main():
     if sujet:
         st.markdown(f"💡 *Suggestions pour **{sujet}*** :")
 
-        # Suggestions dynamiques
+        # Configuration des colonnes pour inclure le bouton RDV dans les suggestions
         suggestions = []
         if sujet == "Inscription":
-            suggestions = ["Comment s'inscrire ?", "Documents requis", "Dates limites"]
+            suggestions = ["Comment s'inscrire ?", "Documents requis"]
         elif sujet == "Carrière":
-            suggestions = ["Débouchés métiers", "Aide au recrutement", "Stages"]
+            suggestions = ["Débouchés métiers", "Stages"]
         elif sujet == "Paiement":
-            suggestions = ["Tarifs formation", "Modalités de paiement", "Bourses disponibles"]
+            suggestions = ["Tarifs formation", "Modalités de paiement"]
         elif sujet == "Pédagogie":
-            suggestions = ["Programme détaillé", "Supports de cours", "Projets pratiques"]
+            suggestions = ["Programme détaillé", "Supports de cours"]
 
-        cols = st.columns(len(suggestions))
+        cols = st.columns(len(suggestions) + 1)
         for i, option in enumerate(suggestions):
             with cols[i]:
                 if st.button(option):
                     st.session_state.temp_prompt = option
+        with cols[-1]:
+            # Bouton de prise de rendez-vous présent dans chaque catégorie
+            st.link_button("🗓️ Prendre RDV", LIEN_CALENDAR)
 
         # Affichage historique
         for message in st.session_state.messages:
@@ -161,15 +168,23 @@ def main():
                     time.sleep(0.04)
                 placeholder.markdown(full_res)
 
-                # Petit rappel WhatsApp après les réponses d'aide ou de paiement
-                if sujet in ["Paiement", "Inscription"]:
-                    st.caption("Besoin d'une assistance immédiate ?")
-                    st.link_button("💬 Finaliser sur WhatsApp", LIEN_WA)
+                # Proposer RDV ou WA après des questions d'inscription ou d'aide
+                if sujet in ["Paiement", "Inscription"] or "Désolé" in response:
+                    st.write("---")
+                    col_wa, col_cal = st.columns(2)
+                    with col_wa:
+                        st.link_button("💬 WhatsApp", LIEN_WA, use_container_width=True)
+                    with col_cal:
+                        st.link_button("📅 Google Calendar", LIEN_CALENDAR, use_container_width=True)
 
             st.session_state.messages.append({"role": "assistant", "content": response})
     else:
         st.info("👋 Bonjour ! Sélectionnez une **thématique** à gauche pour commencer.")
-        st.link_button("📞 Nous contacter directement", LIEN_WA)
+        c1, c2 = st.columns(2)
+        with c1:
+            st.link_button("📞 Nous contacter", LIEN_WA, use_container_width=True)
+        with c2:
+            st.link_button("🗓️ Réserver un créneau", LIEN_CALENDAR, use_container_width=True)
 
 
 if __name__ == "__main__":
