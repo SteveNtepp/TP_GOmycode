@@ -12,7 +12,6 @@ nltk.download('punkt')
 nltk.download('punkt_tab')
 nltk.download('stopwords')
 nltk.download('wordnet')
-nltk.download('averaged_perceptron_tagger')
 
 # --- CONFIGURATION DES CHEMINS ---
 base_path = os.path.dirname(__file__)
@@ -33,10 +32,10 @@ try:
                 if cat not in HIDDEN_CATEGORIES:
                     all_categories.add(cat)
 except FileNotFoundError:
-    st.error("Fichier 'question.txt' introuvable sur le serveur.")
+    st.error("Fichier de données introuvable.")
 
 
-# 2. Prétraitement du texte
+# 2. Prétraitement
 def preprocess(sentence):
     words = word_tokenize(sentence.lower())
     stop_words = set(stopwords.words('english'))
@@ -70,14 +69,48 @@ def get_response(query, selected_category):
 
 # 4. INTERFACE PRINCIPALE
 def main():
-    st.set_page_config(page_title="SmixBot", page_icon="🤖")
+    # Configuration de la page
+    st.set_page_config(page_title="SmixBot", page_icon="🤖", layout="centered")
+
+    # --- INJECTION CSS PERSONNALISÉ ---
+    st.markdown(f"""
+        <style>
+        /* Couleurs du thème */
+        .stApp {{
+            background-color: #f5f5f5; /* Gris très clair */
+            font-family: 'Montserrat', sans-serif;
+        }}
+        [data-testid="stSidebar"] {{
+            background-color: #d342ca; /* Magenta/Rose */
+            color: white;
+        }}
+        .stButton>button {{
+            background-color: #6420ff; /* Violet primaire */
+            color: white;
+            border-radius: 10px;
+            border: none;
+        }}
+        /* Style des bulles de chat */
+        .stChatMessage {{
+            border-radius: 15px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }}
+        </style>
+        """, unsafe_allow_html=True)
 
     # --- BARRE LATÉRALE ---
     with st.sidebar:
         st.title("🚀 Smix Academy")
-        st.write("Bienvenue sur votre assistant de formation.")
-        st.divider()
 
+        with st.expander("💡 Aide & Utilisation"):
+            st.write("""
+            1. Sélectionnez un sujet de formation.
+            2. Posez vos questions dans le chat.
+            3. Utilisez les suggestions pour aller plus vite.
+            """)
+
+        st.divider()
         st.header("Configuration")
         sujet = st.selectbox(
             "Sujet de la formation :",
@@ -86,7 +119,7 @@ def main():
             placeholder="Choisir un thème..."
         )
 
-        if st.button("Nouvelle discussion"):
+        if st.button("🔄 Nouvelle discussion"):
             st.session_state.messages = []
             st.rerun()
 
@@ -97,36 +130,61 @@ def main():
         st.session_state.messages = []
 
     if sujet:
-        st.info(f"📍 Sujet sélectionné : **{sujet}**")
+        # Organisation visuelle avec colonnes
+        col_info, col_stat = st.columns([3, 1])
+        with col_info:
+            st.info(f"📍 Sujet : **{sujet}**")
+        with col_stat:
+            st.metric("Messages", len(st.session_state.messages))
 
         # Affichage de l'historique
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
-        # Saisie utilisateur
-        if prompt := st.chat_input("Posez votre question ici..."):
+        # Quick Replies (Suggestions)
+        st.write("---")
+        st.caption("Suggestions :")
+        q1, q2 = st.columns(2)
+        suggestion = None
+        with q1:
+            if st.button(f"Infos sur {sujet}"):
+                suggestion = f"Peux-tu me donner des infos sur {sujet} ?"
+        with q2:
+            if st.button("Comment s'inscrire ?"):
+                suggestion = "Comment s'inscrire à cette formation ?"
+
+        # Saisie utilisateur (manuelle ou via suggestion)
+        prompt = st.chat_input("Posez votre question ici...")
+        if suggestion:
+            prompt = suggestion
+
+        if prompt:
             st.session_state.messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
 
-            # Réponse de l'assistant avec effet Streaming
+            # Indicateur visuel d'état
             with st.chat_message("assistant"):
-                response = get_response(prompt, sujet)
+                with st.status("SmixBot analyse votre demande...", expanded=False) as status:
+                    response = get_response(prompt, sujet)
+                    time.sleep(1)  # Simulation de recherche
+                    status.update(label="Réponse trouvée !", state="complete", expanded=False)
+
+                # Effet Streaming
                 placeholder = st.empty()
                 full_response = ""
-
-                # Effet d'écriture mot par mot
                 for word in response.split():
                     full_response += word + " "
                     placeholder.markdown(full_response + "▌")
-                    time.sleep(0.06)  # Vitesse ajustable
-
+                    time.sleep(0.06)
                 placeholder.markdown(full_response)
 
             st.session_state.messages.append({"role": "assistant", "content": response})
     else:
-        st.warning("👈 Veuillez sélectionner un sujet dans la barre latérale pour activer le chat.")
+        # Page d'accueil si aucun sujet n'est choisi
+        st.warning("👈 Veuillez sélectionner un sujet dans la barre latérale pour commencer l'aventure.")
+        st.image("https://cdn-icons-png.flaticon.com/512/4712/4712035.png", width=200)
 
 
 if __name__ == "__main__":
