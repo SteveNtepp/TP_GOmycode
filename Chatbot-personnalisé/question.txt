@@ -1,24 +1,22 @@
-Salutations,Bonjour,Bonjour 👋 Bienvenue chez Smix Academy ! Comment puis-je t’aider aujourd’hui ?
-Salutations,Hello!,Hello 😄 Ravi de te voir ici. Tu veux des infos sur notre formation ?
-Salutations,Salut,Salut 👋 Comment puis-je t’aider concernant Smix Academy ?
-Salutations,Hey,Hey 👋 Bienvenue chez Smix Academy !
-Salutations,Ça va ?,Ça va très bien merci 🙌 Tu veux parler de la formation Smix ?
-Inscription,Comment s’inscrire ?,Pour t’inscrire, contacte directement l’équipe Smix Academy via WhatsApp ou nos pages officielles. On t’accompagne pas à pas dans la procédure.
-Inscription,Documents requis,L'inscription est simple : nous demandons principalement une pièce d'identité, une preuve de motivation et la confirmation de ta disponibilité pour les cours.
-Inscription,Dates limites,Les inscriptions se ferment généralement 48h avant le début de chaque session. Surveille nos Smix Talks pour ne pas rater la prochaine !
-Inscription,Conditions d'admission,Aucun diplôme spécifique n'est requis. Nous sélectionnons les candidats sur leur motivation, leur projet professionnel et leur envie d'apprendre.
-Pédagogie,Programme détaillé,Le programme couvre : Design graphique, Copywriting, Montage vidéo, IA générative, Stratégie Social Media, Publicité Meta et Création de sites web.
-Pédagogie,Supports de cours,Tu auras accès à des replays vidéo, des guides PDF, des checklists d'outils et un accès à notre plateforme communautaire.
-Pédagogie,Examens,L'évaluation se fait en continu via des exercices pratiques et un projet de fin de formation qui valide tes compétences réelles.
-Pédagogie,Projets pratiques,Tu travailleras sur des cas réels : création de calendrier éditorial, audit de marque, création de tunnels de vente et campagnes publicitaires.
-Paiement,Tarifs formation,La formation coûte entre 150 000 FCFA et 200 000 FCFA selon que tu choisisses la formule standard ou la formule avec mentorat renforcé.
-Paiement,Modalités de paiement,Le règlement s'effectue par virement, dépôt mobile (Orange Money/Wave) ou espèces. Nous privilégions la simplicité pour toi.
-Paiement,Bourses disponibles,Des bourses partielles ou des réductions "Early Bird" sont parfois offertes aux premiers inscrits de chaque session. Reste à l'écoute !
-Paiement,Remboursement,Toute demande de remboursement doit être formulée avant le début effectif des cours, selon nos conditions générales de vente.
-Carrière,Débouchés métiers,Tu pourras devenir Community Manager, Social Media Manager, Consultant Digital Freelance ou responsable de contenu en agence.
-Carrière,Aide au recrutement,Nous partageons régulièrement les offres de nos partenaires et nous t'aidons à optimiser ton CV et ton profil LinkedIn.
-Carrière,Stages,Les meilleurs étudiants de chaque promotion peuvent bénéficier de stages immersifs au sein de l'écosystème Smix ou chez nos partenaires.
-Carrière,Partenariats entreprises,Nous collaborons avec plusieurs agences et PME qui recrutent prioritairement nos certifiés pour leur expertise pratique.
-Aide,Je n’ai pas trouvé ma réponse,Merci pour ta question 😊 Elle est intéressante. Un membre de l’équipe Smix va te répondre très rapidement.
-Aide,Peu-tu m’aider ?,Bien sûr 👍 Dis-moi exactement ce que tu cherches à savoir.
-Aide,Je veux parler à quelqu’un,Parfait 👍 Je te mets en relation avec un membre de l’équipe Smix Academy via WhatsApp.
+Salutations,Bonjour,Bonjour ! Bienvenue chez Smix Academy. Vous êtes au bon endroit pour propulser votre carrière digitale. Quelle compétence souhaitez-vous dominer aujourd'hui ?
+Salutations,Salut,Salut ! Prêt à transformer votre avenir avec Smix Academy ? Je suis là pour vous guider vers la formation qui correspond exactement à vos ambitions.
+Salutations,Qui es-tu ?,Je suis l'assistant de vente intelligent de Smix Academy. Mon rôle est de vous conseiller sur nos programmes d'élite en Design, Marketing et IA pour faire de vous un expert recherché sur le marché.
+Aide,Comment ça marche ?,C'est très simple : choisissez une thématique à gauche (Inscription, Paiement, etc.), et posez-moi vos questions. Je vous fournis les détails clés pour valider votre projet de formation en un temps record !
+Aide,Que peux-tu faire ?,Je peux vous détailler nos programmes, vous expliquer nos modalités de financement flexibles, et même vous orienter vers un conseiller humain via WhatsApp pour un accompagnement sur mesure.
+Aide,Je suis perdu,Pas de panique ! La plupart de nos étudiants commencent par la catégorie 'Pédagogie' pour découvrir l'étendue de nos modules. Vous pouvez aussi cliquer sur 'Parler à un conseiller' pour un audit gratuit de vos besoins.
+Inscription,Comment s'inscrire ?,L'inscription est rapide et sécurisée. Il vous suffit de nous contacter via WhatsApp pour réserver votre place. Ne tardez pas, nos sessions sont limitées à de petits groupes pour garantir un encadrement premium.
+Inscription,Documents requis,Pour maintenir nos standards d'excellence, nous demandons juste une pièce d'identité et un court échange sur vos motivations. Nous voulons nous assurer que nos programmes sont le tremplin idéal pour vous.
+Inscription,Dates limites,Le succès n'attend pas ! Les inscriptions ferment 48h avant le début de session. Anticiper votre inscription vous assure non seulement une place, mais aussi l'accès prioritaire à nos ressources de pré-formation.
+Inscription,Conditions d'admission,Aucun diplôme spécifique n'est requis. Nous misons sur votre passion et votre détermination. Si vous avez la volonté d'apprendre, Smix Academy vous donnera les outils techniques pour réussir.
+Carrière,Débouchés métiers,Nos diplômés s'insèrent avec succès en tant que Community Managers, Designers UX/UI ou experts en Stratégie Digitale. Le marché africain et international est en forte demande de profils formés à la méthode Smix.
+Carrière,Aide au recrutement,Nous ne nous contentons pas de former : nous vous coachons. Optimisation de profil LinkedIn, techniques de closing et mise en relation avec notre réseau d'agences partenaires font partie de notre ADN.
+Carrière,Stages,L'immersion est la clé. Les profils les plus dynamiques bénéficient de stages au sein de notre écosystème pour appliquer leurs compétences sur des projets réels et rémunérateurs.
+Carrière,Partenariats entreprises,Grâce à nos partenariats avec des leaders du digital, nos étudiants bénéficient d'une visibilité accrue. Être certifié Smix Academy, c'est porter un label de qualité reconnu par les recruteurs.
+Paiement,Tarifs formation,Investir en soi est le meilleur placement. Nos formations d'élite coûtent entre 150 000 et 200 000 FCFA. C'est un coût rentabilisé dès vos premières missions en freelance ou votre premier emploi.
+Paiement,Modalités de paiement,La flexibilité est notre priorité. Nous acceptons Orange Money, Wave, virements et même des paiements échelonnés pour que votre budget ne soit jamais un frein à votre montée en compétences.
+Paiement,Bourses disponibles,Nous récompensons l'anticipation ! Des réductions 'Early Bird' sont offertes aux premiers inscrits. Contactez-nous sur WhatsApp pour vérifier si vous êtes éligible à l'offre du mois.
+Paiement,Remboursement,Nous sommes confiants dans la qualité de notre enseignement. Si toutefois vos circonstances changent avant le démarrage, notre politique de remboursement simplifiée protège votre investissement.
+Pédagogie,Programme détaillé,Un programme 360° : Design Graphique, Montage Vidéo Pro, Stratégie Meta Ads et Intelligence Artificielle générative. Vous apprenez les outils que les professionnels utilisent réellement en 2026.
+Pédagogie,Supports de cours,Accédez à un espace membre exclusif avec des guides PDF, des checklists de productivité et tous les replays de vos sessions pour réviser à votre rythme, où que vous soyez.
+Pédagogie,Examens,Pas de théorie inutile. Votre certification est validée par des projets réels. Vous sortez de chez nous avec un portfolio concret à présenter à vos futurs clients ou employeurs.
+Pédagogie,Projets pratiques,Chez Smix, on apprend en faisant. Vous gérerez de vraies campagnes et créerez de vrais visuels pour de vraies marques. C'est cette expérience terrain qui fera la différence lors de vos entretiens.
