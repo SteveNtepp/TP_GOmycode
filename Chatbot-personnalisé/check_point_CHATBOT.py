@@ -4,19 +4,22 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import string
-import os  # Ajouté pour la gestion des chemins universels
+import os
 
 # --- INITIALISATION ---
+# Téléchargement des ressources NLTK nécessaires
 nltk.download('punkt')
+nltk.download('punkt_tab')  # CRUCIAL : Résout l'erreur LookupError sur Streamlit Cloud
 nltk.download('stopwords')
 nltk.download('wordnet')
+nltk.download('averaged_perceptron_tagger')
 
 # 1. Chargement des données avec gestion du chemin universel
 qa_data = []
 all_categories = set()
 HIDDEN_CATEGORIES = ["Salutations", "Aide"]
 
-# Cette logique permet de trouver le fichier peu importe l'ordinateur
+# Détection automatique du dossier du script pour trouver question.txt
 base_path = os.path.dirname(__file__)
 file_path = os.path.join(base_path, "question.txt")
 
@@ -30,17 +33,18 @@ try:
                 if cat not in HIDDEN_CATEGORIES:
                     all_categories.add(cat)
 except FileNotFoundError:
-    st.error(f"Erreur : Le fichier 'question.txt' est introuvable dans le dossier du script.")
+    st.error("Erreur : Le fichier 'question.txt' est introuvable dans le dépôt GitHub.")
 
 # 2. Fonction de Prétraitement
 def preprocess(sentence):
     words = word_tokenize(sentence.lower())
+    # Utilisation de stopwords en anglais comme dans votre script original
     stop_words = set(stopwords.words('english'))
     words = [w for w in words if w not in stop_words and w not in string.punctuation]
     lemmatizer = WordNetLemmatizer()
     return [lemmatizer.lemmatize(w) for w in words]
 
-# 3. Logique de recherche
+# 3. Logique de recherche (Hybride : Catégorie choisie + Salutations/Aide)
 def get_response(query, selected_category):
     query_tokens = preprocess(query)
     if not query_tokens:
@@ -49,6 +53,7 @@ def get_response(query, selected_category):
     max_similarity = -1
     best_response = "Désolé, je n'ai pas trouvé de réponse précise. Essayez de reformuler ou changez de catégorie."
 
+    # Recherche étendue à la catégorie choisie + messages de base (salutations/aide)
     target_categories = [selected_category] + HIDDEN_CATEGORIES
     filtered_data = [item for item in qa_data if item['categorie'] in target_categories]
 
@@ -84,11 +89,13 @@ def main():
             st.session_state.messages = []
             st.rerun()
 
+    # Initialisation de l'historique dans le session_state
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
+    # Affichage du chat
     if sujet:
-        st.info(f"📍 Vous discutez de : **{sujet}**")
+        st.info(f"📍 Sujet actuel : **{sujet}**")
 
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
@@ -105,8 +112,8 @@ def main():
             with st.chat_message("assistant"):
                 st.markdown(response)
     else:
-        st.warning("👈 Veuillez sélectionner une catégorie dans le menu à gauche pour commencer.")
-        st.write("Une fois une catégorie choisie, SmixBot utilisera les données de formation pour vous répondre.")
+        st.warning("👈 Veuillez sélectionner une catégorie dans la barre latérale.")
+        st.write("SmixBot répondra à vos questions sur les formations une fois le sujet choisi.")
 
 if __name__ == "__main__":
     main()
