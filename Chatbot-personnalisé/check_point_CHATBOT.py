@@ -183,7 +183,7 @@ def main():
                 placeholder.markdown(full_res)
 
                 # --- GÉNÉRATION DU LIEN WA AVEC TEXTE PRÉ-REMPLI ---
-                msg_wa = f"Bonjour Smix Academy ! Je m'intéresse à la formation {sujet}. J'ai une question concernant : {prompt}"
+                msg_wa = f"Bonjour Smix Academy ! Je m'intéresse à la formation en FullStack Community Management . J'ai une question concernant : {prompt}"
                 msg_encoded = urllib.parse.quote(msg_wa)
                 lien_wa_complet = f"https://wa.me/{NUMERO_WA}?text={msg_encoded}"
 
