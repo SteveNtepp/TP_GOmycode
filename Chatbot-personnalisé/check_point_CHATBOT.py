@@ -6,6 +6,12 @@ from nltk.stem import WordNetLemmatizer
 import string
 import os
 import time
+import google.generativeai as genai
+
+# --- CONFIGURATION GEMINI ---
+GEMINI_API_KEY = "AIzaSyAdKQw-DubGqOk-Zr6ST_xQ1UFwFVVxGJc"
+genai.configure(api_key=GEMINI_API_KEY)
+model_ai = genai.GenerativeModel('gemini-1.5-flash')
 
 # --- INITIALISATION NLTK ---
 nltk.download('punkt')
@@ -14,16 +20,13 @@ nltk.download('stopwords')
 nltk.download('wordnet')
 nltk.download('averaged_perceptron_tagger')
 
-# --- CONFIGURATION DES CHEMINS ---
+# --- CONFIGURATION DES CHEMINS & LIENS ---
 base_path = os.path.dirname(__file__)
 file_path = os.path.join(base_path, "question.txt")
-
-# --- CONFIGURATION EXTERNE ---
-NUMERO_WA = "237679648336"
-LIEN_WA = f"https://wa.me/{NUMERO_WA}?text=Bonjour%20Smix%20Academy,%20j'aimerais%20en%20savoir%20plus%20sur%20vos%20formations."
+LIEN_WA = "https://wa.me/237679648336"
 LIEN_CALENDAR = "https://calendar.app.google/DgFJZkPYehjGzLUD8"
 
-# 1. Chargement des données
+# 1. Chargement des données locales
 qa_data = []
 all_categories = set()
 HIDDEN_CATEGORIES = ["Salutations", "Aide"]
@@ -41,7 +44,7 @@ except FileNotFoundError:
     st.error("Fichier de données introuvable.")
 
 
-# 2. Prétraitement
+# 2. Prétraitement du texte
 def preprocess(sentence):
     words = word_tokenize(sentence.lower())
     stop_words = set(stopwords.words('english'))
@@ -50,15 +53,13 @@ def preprocess(sentence):
     return [lemmatizer.lemmatize(w) for w in words]
 
 
-# 3. Logique de réponse
-def get_response(query, selected_category):
+# 3. Logique de réponse Hybride (Local + Gemini)
+def get_hybrid_response(query, selected_category):
     query_tokens = preprocess(query)
-    if not query_tokens:
-        return "Je vous écoute, n'hésitez pas à poser une question précise."
-
     max_similarity = -1
-    best_response = "Désolé, je n'ai pas trouvé de réponse précise. Pouvez-vous reformuler ou prendre un RDV avec nous ?"
+    best_local_response = None
 
+    # Recherche dans question.txt
     target_categories = [selected_category] + HIDDEN_CATEGORIES
     filtered_data = [item for item in qa_data if item['categorie'] in target_categories]
 
@@ -67,57 +68,79 @@ def get_response(query, selected_category):
         union = set(query_tokens).union(item_tokens)
         if not union: continue
         similarity = len(set(query_tokens).intersection(item_tokens)) / float(len(union))
-        if similarity > max_similarity and similarity > 0.1:
+        if similarity > max_similarity:
             max_similarity = similarity
-            best_response = item['reponse']
-    return best_response
+            best_local_response = item['reponse']
+
+    # Seuil de déclenchement Gemini (si pas de match local précis)
+    if max_similarity > 0.4:
+        return best_local_response
+    else:
+        prompt_system = f"Tu es Smix Sales Assistant pour Smix Academy. Réponds de façon concise et commerciale. Contexte : {selected_category}. Question : "
+        try:
+            response = model_ai.generate_content(prompt_system + query)
+            return response.text
+        except:
+            return "Je n'ai pas pu traiter la demande, merci de nous contacter sur WhatsApp."
 
 
 # 4. INTERFACE PRINCIPALE
 def main():
-    st.set_page_config(page_title="SmixBot Pro", page_icon="🤖", layout="centered")
+    st.set_page_config(page_title="Smix Sales Assistant", page_icon="🤖", layout="centered")
 
-    # --- CSS PERSONNALISÉ ---
-    st.markdown("""
+    # --- CHARTE GRAPHIQUE (INDIGO & VOLET CLAIR) ---
+    st.markdown(f"""
         <style>
-        .stChatMessage { border-radius: 15px; padding: 15px; border: 1px solid rgba(128,128,128,0.2); margin-bottom: 15px; background-color: rgba(128,128,128,0.05); }
-        .stButton>button { border-radius: 8px; border: 1px solid #4CAF50; color: #4CAF50; background-color: transparent; font-size: 0.85rem; }
-        .stButton>button:hover { background-color: #4CAF50; color: white; }
-        /* Style spécial pour WhatsApp (Vert) */
-        .wa-button button { background-color: #25D366 !important; color: white !important; border: none !important; }
-        /* Style spécial pour Calendar (Bleu Google) */
-        .cal-button button { background-color: #4285F4 !important; color: white !important; border: none !important; }
+        /* Fond de l'application et texte */
+        .stApp {{ background-color: #F8F9FE; color: #1E1E2F; }}
+
+        /* Personnalisation Sidebar */
+        section[data-testid="stSidebar"] {{ background-color: #FFFFFF; border-right: 1px solid #E0E4F5; }}
+
+        /* Bulles de chat */
+        .stChatMessage {{ border-radius: 12px; border: 1px solid #E0E4F5; background-color: #FFFFFF; padding: 15px; }}
+
+        /* Boutons Indigo */
+        .stButton>button {{
+            border-radius: 8px;
+            border: 1px solid #4F46E5;
+            color: #4F46E5;
+            background-color: #FFFFFF;
+            font-weight: 500;
+            transition: all 0.3s;
+        }}
+        .stButton>button:hover {{ background-color: #4F46E5; color: white; }}
+
+        /* Liens boutons (WhatsApp/Calendar) */
+        a[data-testid="stBaseButton-secondary"] {{ background-color: #4F46E5 !important; color: white !important; border: none !important; }}
         </style>
         """, unsafe_allow_html=True)
 
     # --- BARRE LATÉRALE ---
     with st.sidebar:
-        st.title("🚀 Smix Academy")
-
-        # Boutons de contact permanents
-        st.link_button("🟢 Parler à un conseiller (WA)", LIEN_WA, use_container_width=True)
-        st.link_button("📅 Prendre un RDV (Calendar)", LIEN_CALENDAR, use_container_width=True)
-
+        st.title("Smix Academy")
+        st.link_button("Parler à un conseiller", LIEN_WA, use_container_width=True)
+        st.link_button("Prendre un RDV", LIEN_CALENDAR, use_container_width=True)
         st.divider()
+
         sujet = st.selectbox(
-            "🎓 Thématique de formation :",
+            "Thématique de formation :",
             options=sorted(list(all_categories)),
             index=None,
             placeholder="Sélectionnez un sujet"
         )
-        if st.button("🗑️ Réinitialiser le Chat"):
+        if st.button("Réinitialiser le Chat"):
             st.session_state.messages = []
             st.rerun()
 
-    st.title("SmixSales Assistant 🤖")
+    # --- ZONE DE CHAT ---
+    st.title("Smix Sales Assistant")
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
     if sujet:
-        st.markdown(f"💡 *Suggestions pour **{sujet}*** :")
-
-        # Configuration des colonnes pour inclure le bouton RDV dans les suggestions
+        # Suggestions par catégorie
         suggestions = []
         if sujet == "Inscription":
             suggestions = ["Comment s'inscrire ?", "Documents requis"]
@@ -126,25 +149,22 @@ def main():
         elif sujet == "Paiement":
             suggestions = ["Tarifs formation", "Modalités de paiement"]
         elif sujet == "Pédagogie":
-            suggestions = ["Programme détaillé", "Supports de cours"]
+            suggestions = ["Programme détaillé", "Projets pratiques"]
 
+        st.markdown(f"**Suggestions :**")
         cols = st.columns(len(suggestions) + 1)
-        for i, option in enumerate(suggestions):
+        for i, opt in enumerate(suggestions):
             with cols[i]:
-                if st.button(option):
-                    st.session_state.temp_prompt = option
+                if st.button(opt): st.session_state.temp_prompt = opt
         with cols[-1]:
-            # Bouton de prise de rendez-vous présent dans chaque catégorie
-            st.link_button("🗓️ Prendre RDV", LIEN_CALENDAR)
+            st.link_button("Prendre RDV", LIEN_CALENDAR)
 
-        # Affichage historique
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+        # Historique
+        for msg in st.session_state.messages:
+            with st.chat_message(msg["role"]): st.markdown(msg["content"])
 
-        # Saisie
-        prompt = st.chat_input("Posez votre question ici...")
-
+        # Input
+        prompt = st.chat_input("Posez votre question...")
         if "temp_prompt" in st.session_state:
             prompt = st.session_state.temp_prompt
             del st.session_state.temp_prompt
@@ -155,10 +175,10 @@ def main():
                 st.markdown(prompt)
 
             with st.chat_message("assistant"):
-                with st.status("🔍 Recherche en cours...", expanded=False) as status:
-                    response = get_response(prompt, sujet)
-                    time.sleep(0.6)
-                    status.update(label="✅ Réponse trouvée", state="complete")
+                with st.status("Recherche de la meilleure réponse...", expanded=False) as status:
+                    response = get_hybrid_response(prompt, sujet)
+                    time.sleep(0.5)
+                    status.update(label="Analyse terminée", state="complete")
 
                 placeholder = st.empty()
                 full_res = ""
@@ -168,23 +188,16 @@ def main():
                     time.sleep(0.04)
                 placeholder.markdown(full_res)
 
-                # Proposer RDV ou WA après des questions d'inscription ou d'aide
-                if sujet in ["Paiement", "Inscription"] or "Désolé" in response:
+                # Relance conversion
+                if sujet in ["Paiement", "Inscription"]:
                     st.write("---")
-                    col_wa, col_cal = st.columns(2)
-                    with col_wa:
-                        st.link_button("💬 WhatsApp", LIEN_WA, use_container_width=True)
-                    with col_cal:
-                        st.link_button("📅 Google Calendar", LIEN_CALENDAR, use_container_width=True)
+                    c1, c2 = st.columns(2)
+                    c1.link_button("💬 WhatsApp", LIEN_WA, use_container_width=True)
+                    c2.link_button("🗓️ Calendrier", LIEN_CALENDAR, use_container_width=True)
 
             st.session_state.messages.append({"role": "assistant", "content": response})
     else:
-        st.info("👋 Bonjour ! Sélectionnez une **thématique** à gauche pour commencer.")
-        c1, c2 = st.columns(2)
-        with c1:
-            st.link_button("📞 Nous contacter", LIEN_WA, use_container_width=True)
-        with c2:
-            st.link_button("🗓️ Réserver un créneau", LIEN_CALENDAR, use_container_width=True)
+        st.info("Veuillez sélectionner une thématique dans la barre latérale pour commencer.")
 
 
 if __name__ == "__main__":
