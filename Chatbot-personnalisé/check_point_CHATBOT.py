@@ -9,10 +9,14 @@ import time
 import google.generativeai as genai
 
 # --- CONFIGURATION GEMINI ---
-# Ta clé est intégrée ici, mais assure-toi qu'elle est active sur Google AI Studio
-GEMINI_API_KEY = "AIzaSyAdKQw-DubGqOk-Zr6ST_xQ1UFwFVVxGJc"
-genai.configure(api_key=GEMINI_API_KEY)
-model_ai = genai.GenerativeModel('gemini-1.5-flash')
+# Mise à jour avec votre nouvelle clé API
+API_KEY = "AIzaSyDO_FkeH74IxwNRPHJugw9xZ0ZfGnihIjQ"
+
+try:
+    genai.configure(api_key=API_KEY)
+    model_ai = genai.GenerativeModel('gemini-1.5-flash')
+except Exception as e:
+    st.error(f"Erreur de configuration Gemini : {e}")
 
 # --- INITIALISATION NLTK ---
 nltk.download('punkt')
@@ -27,7 +31,7 @@ file_path = os.path.join(base_path, "question.txt")
 LIEN_WA = "https://wa.me/237679648336"
 LIEN_CALENDAR = "https://calendar.app.google/DgFJZkPYehjGzLUD8"
 
-# 1. Chargement des données locales (Base de connaissances officielle)
+# 1. Chargement des données locales (question.txt)
 qa_data = []
 all_categories = set()
 HIDDEN_CATEGORIES = ["Salutations", "Aide"]
@@ -73,23 +77,21 @@ def get_hybrid_response(query, selected_category):
             max_similarity = similarity
             best_local_response = item['reponse']
 
-    # B. Décision de réponse
-    # Si similarité forte (>0.6), on donne la réponse officielle du fichier texte
-    if max_similarity > 0.6:
+    # B. Décision de réponse (Seuil strict à 0.7 pour laisser l'IA agir sur le reste)
+    if max_similarity > 0.7:
         return best_local_response
 
-    # Sinon, on utilise Gemini pour répondre intelligemment
+    # C. Appel Gemini si pas de match local parfait
     else:
-        # Instruction spécifique pour que Gemini agisse en tant qu'expert Smix Academy
         prompt_system = f"""
         Tu es 'Smix Sales Assistant', l'expert de la Smix Academy.
-        Contexte actuel : La formation sur la thématique '{selected_category}'.
+        Ton but est d'informer et de convaincre les prospects sur la formation '{selected_category}'.
 
-        Instructions :
-        1. Sois professionnel, enthousiaste et concis.
-        2. Si la question porte sur des détails techniques (comme le design graphique, l'IA, etc.), explique clairement les bénéfices.
-        3. Si tu ne connais pas un prix ou une date spécifique, invite l'utilisateur à cliquer sur le bouton WhatsApp.
-        4. Ne mentionne jamais que tu es une IA ou un modèle de langage.
+        Règles :
+        1. Sois professionnel, enthousiaste et expert.
+        2. Explique les concepts (Design, IA, Ads, etc.) de manière simple mais valorisante.
+        3. Si tu ne connais pas une info précise (prix exact non listé, date précise), renvoie vers WhatsApp.
+        4. Ne dis jamais que tu es une IA.
 
         Question du client : """
 
@@ -98,21 +100,21 @@ def get_hybrid_response(query, selected_category):
             if response and response.text:
                 return response.text
             else:
-                return "C'est une excellente question. Pour vous donner une réponse précise et adaptée à votre projet, je vous suggère d'en discuter directement avec un de nos conseillers sur WhatsApp."
-        except Exception:
-            return "Je n'ai pas pu générer de réponse pour le moment. Pourriez-vous reformuler ou contacter notre équipe sur WhatsApp ?"
+                return "Je n'ai pas pu générer de réponse précise. Discutons-en sur WhatsApp !"
+        except Exception as e:
+            return "Désolé, je rencontre une petite difficulté technique. Cliquez sur le bouton WhatsApp pour parler à un conseiller."
 
 
 # 4. INTERFACE PRINCIPALE
 def main():
     st.set_page_config(page_title="Smix Sales Assistant", page_icon="🤖", layout="centered")
 
-    # --- STYLE GRAPHIQUE INDIGO & CLAIR ---
+    # --- CHARTE GRAPHIQUE INDIGO ---
     st.markdown("""
         <style>
         .stApp { background-color: #F8F9FE; color: #1E1E2F; }
         section[data-testid="stSidebar"] { background-color: #FFFFFF; border-right: 1px solid #E0E4F5; }
-        .stChatMessage { border-radius: 12px; border: 1px solid #E0E4F5; background-color: #FFFFFF; padding: 15px; margin-bottom: 10px; }
+        .stChatMessage { border-radius: 12px; border: 1px solid #E0E4F5; background-color: #FFFFFF; padding: 15px; margin-bottom: 10px; color: black; }
         .stButton>button { border-radius: 8px; border: 1px solid #4F46E5; color: #4F46E5; background-color: #FFFFFF; font-weight: 500; }
         .stButton>button:hover { background-color: #4F46E5; color: white; }
         </style>
@@ -143,30 +145,30 @@ def main():
 
     if sujet:
         # Suggestions interactives
-        suggestions = {
+        suggestions_map = {
             "Inscription": ["Comment s'inscrire ?", "Documents requis"],
             "Carrière": ["Débouchés métiers", "Stages"],
             "Paiement": ["Tarifs formation", "Modalités de paiement"],
             "Pédagogie": ["Programme détaillé", "Projets pratiques"]
         }
 
-        current_suggestions = suggestions.get(sujet, ["Plus d'infos"])
+        opts = suggestions_map.get(sujet, ["Plus d'infos"])
 
-        st.write("**Suggestions rapides :**")
-        cols = st.columns(len(current_suggestions) + 1)
-        for i, opt in enumerate(current_suggestions):
+        st.write("**Suggestions :**")
+        cols = st.columns(len(opts) + 1)
+        for i, opt in enumerate(opts):
             with cols[i]:
                 if st.button(opt): st.session_state.temp_prompt = opt
         with cols[-1]:
             st.link_button("Prendre RDV", LIEN_CALENDAR)
 
-        # Affichage de l'historique
+        # Affichage historique
         for msg in st.session_state.messages:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
 
-        # Gestion de l'input utilisateur
-        prompt = st.chat_input("Posez votre question ici...")
+        # Input utilisateur
+        prompt = st.chat_input("Votre question...")
         if "temp_prompt" in st.session_state:
             prompt = st.session_state.temp_prompt
             del st.session_state.temp_prompt
@@ -177,23 +179,20 @@ def main():
                 st.markdown(prompt)
 
             with st.chat_message("assistant"):
-                with st.status("Recherche de la meilleure réponse...", expanded=False) as status:
-                    # Ici, on appelle notre logique hybride améliorée
+                with st.status("Analyse Smix IA...", expanded=False) as status:
                     response = get_hybrid_response(prompt, sujet)
-                    time.sleep(0.5)
                     status.update(label="Analyse terminée", state="complete")
 
                 placeholder = st.empty()
                 full_res = ""
-                # Effet d'écriture progressive
                 for word in response.split():
                     full_res += word + " "
                     placeholder.markdown(full_res + "▌")
                     time.sleep(0.04)
                 placeholder.markdown(full_res)
 
-                # Relance WhatsApp pour les sujets de conversion
-                if sujet in ["Paiement", "Inscription"]:
+                # Relance Contact si besoin de conversion
+                if sujet in ["Paiement", "Inscription"] or "Désolé" in response:
                     st.write("---")
                     c1, c2 = st.columns(2)
                     c1.link_button("💬 WhatsApp", LIEN_WA, use_container_width=True)
@@ -201,7 +200,7 @@ def main():
 
             st.session_state.messages.append({"role": "assistant", "content": response})
     else:
-        st.info("Veuillez sélectionner une thématique dans la barre latérale pour commencer l'assistance.")
+        st.info("Veuillez sélectionner une thématique à gauche pour activer l'assistant.")
 
 
 if __name__ == "__main__":
