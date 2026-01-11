@@ -6,7 +6,7 @@ from nltk.stem import WordNetLemmatizer
 import string
 import os
 import time
-from PIL import Image  # Nécessaire pour le logo
+from PIL import Image
 
 # --- INITIALISATION NLTK ---
 nltk.download('punkt')
@@ -18,7 +18,6 @@ nltk.download('averaged_perceptron_tagger')
 # --- CONFIGURATION DES CHEMINS ---
 base_path = os.path.dirname(__file__)
 file_path = os.path.join(base_path, "question.txt")
-# Chemin mis à jour vers le dossier "Asset"
 logo_path = os.path.join(base_path, "Asset", "logo Smix-transparent.png")
 
 # 1. Chargement des données
@@ -77,10 +76,11 @@ def main():
 
     # --- BARRE LATÉRALE ---
     with st.sidebar:
-        # Affichage du Logo
+        # Affichage du Logo REDIMENSIONNÉ
         try:
             image = Image.open(logo_path)
-            st.image(image, use_container_width=True)
+            # Nous avons retiré use_container_width et fixé la largeur à 150
+            st.image(image, width=150)
         except Exception:
             st.title("🚀 Smix Academy")
 
@@ -111,27 +111,21 @@ def main():
                 st.markdown(message["content"])
 
         if prompt := st.chat_input("Posez votre question..."):
-            # Message utilisateur
             st.session_state.messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
 
-            # Message de l'assistant avec effet Streaming
             with st.chat_message("assistant"):
                 response = get_response(prompt, sujet)
-
-                # Simulation du mode "Mot par Mot"
                 placeholder = st.empty()
                 full_response = ""
 
-                # On divise la réponse en mots
+                # Effet Streaming (Mot par mot)
                 for word in response.split():
                     full_response += word + " "
-                    # On affiche le texte partiel avec un curseur
                     placeholder.markdown(full_response + "▌")
-                    time.sleep(0.08)  # Vitesse de l'écriture
+                    time.sleep(0.08)
 
-                # Affichage final sans le curseur
                 placeholder.markdown(full_response)
 
             st.session_state.messages.append({"role": "assistant", "content": response})
