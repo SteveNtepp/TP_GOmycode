@@ -13,9 +13,10 @@ nltk.download('punkt_tab')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
-# --- CONFIGURATION DES LIENS ---
+# --- CONFIGURATION ---
 LIEN_WA = "https://wa.me/237679648336"
 LIEN_CALENDAR = "https://calendar.app.google/DgFJZkPYehjGzLUD8"
+COULEUR_INDIGO = "#4F46E5"
 
 # --- CHARGEMENT DES DONNÉES ---
 base_path = os.path.dirname(__file__)
@@ -38,7 +39,7 @@ except FileNotFoundError:
     st.error("Fichier question.txt introuvable.")
 
 
-# --- PRÉTRAITEMENT ---
+# --- FONCTIONS LOGIQUES ---
 def preprocess(sentence):
     words = word_tokenize(sentence.lower())
     stop_words = set(stopwords.words('english'))
@@ -47,11 +48,10 @@ def preprocess(sentence):
     return [lemmatizer.lemmatize(w) for w in words]
 
 
-# --- LOGIQUE DE RÉPONSE (RECHERCHE LOCALE UNIQUEMENT) ---
 def get_local_response(query, selected_category):
     query_tokens = preprocess(query)
     max_similarity = -1
-    best_response = "Désolé, je n'ai pas la réponse exacte. Contactez-nous sur WhatsApp pour une aide personnalisée !"
+    best_response = "Désolé, je n'ai pas la réponse exacte. Mais notre équipe est disponible immédiatement sur WhatsApp pour vous aider !"
 
     target_categories = [selected_category] + HIDDEN_CATEGORIES
     filtered_data = [item for item in qa_data if item['categorie'] in target_categories]
@@ -71,43 +71,59 @@ def get_local_response(query, selected_category):
 def main():
     st.set_page_config(page_title="Smix Sales Assistant", page_icon="🤖", layout="centered")
 
-    # CSS : Indigo Blue pour les titres et boutons
-    st.markdown("""
+    # CSS : Correction des couleurs et styles
+    st.markdown(f"""
         <style>
-        .stApp { background-color: #F8F9FE; }
-        /* Indigo Blue pour les titres spécifiques */
-        .indigo-title { color: #4F46E5; font-weight: bold; }
-        .stChatMessage { border-radius: 12px; background-color: white; border: 1px solid #E0E4F5; }
-        .stButton>button { 
+        .stApp {{ background-color: #F8F9FE; }}
+        /* Couleur Indigo sur les titres */
+        .indigo-text {{ color: {COULEUR_INDIGO} !important; font-weight: bold; }}
+        .stChatMessage {{ border-radius: 12px; background-color: white; border: 1px solid #E0E4F5; }}
+
+        /* Boutons d'action rapides */
+        .stButton>button {{ 
             border-radius: 8px; 
-            border: 1px solid #4F46E5; 
-            color: #4F46E5; 
+            border: 1px solid {COULEUR_INDIGO}; 
+            color: {COULEUR_INDIGO}; 
             background-color: white;
-            font-size: 0.8rem;
-        }
-        .stButton>button:hover { background-color: #4F46E5; color: white; }
+            font-size: 0.85rem;
+            transition: 0.3s;
+        }}
+        .stButton>button:hover {{ background-color: {COULEUR_INDIGO}; color: white; }}
+
+        /* Bouton CTA WhatsApp spécifique */
+        .cta-wa {{ 
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #25D366;
+            color: white !important;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 10px;
+            text-align: center;
+        }}
         </style>
         """, unsafe_allow_html=True)
 
     with st.sidebar:
-        # Titre en Bleu Indigo
-        st.markdown('<h1 class="indigo-title">Smix Academy</h1>', unsafe_allow_html=True)
-        st.link_button("Parler à un conseiller", LIEN_WA, use_container_width=True)
-        st.link_button("Prendre un RDV", LIEN_CALENDAR, use_container_width=True)
+        # Titre Sidebar Indigo
+        st.markdown(f'<h1 class="indigo-text">Smix Academy</h1>', unsafe_allow_html=True)
+        st.link_button("🟢 Parler à un conseiller", LIEN_WA, use_container_width=True)
+        st.link_button("📅 Prendre un RDV", LIEN_CALENDAR, use_container_width=True)
         st.divider()
-        sujet = st.selectbox("Sélectionnez une thématique :", options=sorted(list(all_categories)), index=None)
-        if st.button("Effacer la discussion"):
+        sujet = st.selectbox("🎯 Choisir une thématique :", options=sorted(list(all_categories)), index=None)
+        if st.button("🗑️ Effacer la discussion"):
             st.session_state.messages = []
             st.rerun()
 
-    # Titre principal en Bleu Indigo
-    st.markdown('<h1 class="indigo-title">Smix Sales Assistant</h1>', unsafe_allow_html=True)
+    # Titre Principal Indigo
+    st.markdown(f'<h1 class="indigo-text">Smix Sales Assistant</h1>', unsafe_allow_html=True)
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
     if sujet:
-        # --- 4 BOUTONS D'ACTION PAR CATÉGORIE ---
+        # Configuration des 4 boutons d'action par catégorie
         suggestions = {
             "Inscription": ["Comment s'inscrire ?", "Documents requis", "Dates limites", "Conditions d'admission"],
             "Carrière": ["Débouchés métiers", "Aide au recrutement", "Stages", "Partenariats entreprises"],
@@ -115,9 +131,9 @@ def main():
             "Pédagogie": ["Programme détaillé", "Supports de cours", "Examens", "Projets pratiques"]
         }
 
-        st.write("📌 **Actions rapides :**")
+        st.write("💡 **Questions fréquentes :**")
         opts = suggestions.get(sujet, [])
-        cols = st.columns(2)  # Disposition en 2x2 pour la lisibilité
+        cols = st.columns(2)
         for i, opt in enumerate(opts):
             with cols[i % 2]:
                 if st.button(opt, use_container_width=True):
@@ -127,8 +143,8 @@ def main():
         for msg in st.session_state.messages:
             with st.chat_message(msg["role"]): st.markdown(msg["content"])
 
-        # Input
-        prompt = st.chat_input("Posez votre question...")
+        # Gestion de l'input
+        prompt = st.chat_input("Écrivez votre question ici...")
         if "temp_prompt" in st.session_state:
             prompt = st.session_state.temp_prompt
             del st.session_state.temp_prompt
@@ -140,7 +156,8 @@ def main():
 
             with st.chat_message("assistant"):
                 response = get_local_response(prompt, sujet)
-                # Effet d'écriture
+
+                # Effet de dactylographie
                 placeholder = st.empty()
                 full_res = ""
                 for word in response.split():
@@ -149,9 +166,16 @@ def main():
                     time.sleep(0.03)
                 placeholder.markdown(full_res)
 
+                # --- RÉINTÉGRATION DU CTA WHATSAPP ---
+                st.markdown(f"""
+                <div style="text-align: right;">
+                    <a href="{LIEN_WA}" class="cta-wa">💬 Finaliser sur WhatsApp</a>
+                </div>
+                """, unsafe_allow_html=True)
+
             st.session_state.messages.append({"role": "assistant", "content": response})
     else:
-        st.info("👋 Bienvenue ! Veuillez choisir une thématique dans la barre latérale pour commencer.")
+        st.info("👋 Bonjour ! Pour commencer, sélectionnez une **thématique** dans la barre latérale.")
 
 
 if __name__ == "__main__":
