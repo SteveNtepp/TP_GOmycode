@@ -52,7 +52,7 @@ def get_response(query, selected_category):
         return "Je vous écoute, n'hésitez pas à poser une question précise."
 
     max_similarity = -1
-    best_response = "Désolé, je n'ai pas trouvé de réponse exacte. Pouvez-vous reformuler ?"
+    best_response = "Désolé, je n'ai pas trouvé de réponse précise. Pouvez-vous reformuler votre question ?"
 
     target_categories = [selected_category] + HIDDEN_CATEGORIES
     filtered_data = [item for item in qa_data if item['categorie'] in target_categories]
@@ -72,63 +72,82 @@ def get_response(query, selected_category):
 def main():
     st.set_page_config(page_title="SmixBot Pro", page_icon="🤖", layout="centered")
 
-    # --- 2. INJECTION CSS CUSTOM ---
+    # --- AMÉLIORATION LISIBILITÉ DARK MODE ---
     st.markdown("""
         <style>
-        .stApp { background-color: #f8f9fa; }
-        .stChatMessage { border-radius: 15px; border: 1px solid #e0e0e0; margin-bottom: 10px; }
-        .stButton>button { border-radius: 20px; width: 100%; }
+        /* Adaptabilité Dark/Light Mode */
+        .stChatMessage {
+            border-radius: 15px;
+            padding: 15px;
+            border: 1px solid rgba(128, 128, 128, 0.2);
+            margin-bottom: 15px;
+            background-color: rgba(128, 128, 128, 0.05);
+        }
+        /* Style des boutons de suggestions */
+        .stButton>button {
+            border-radius: 10px;
+            border: 1px solid #4CAF50;
+            color: #4CAF50;
+            background-color: transparent;
+            transition: all 0.3s;
+        }
+        .stButton>button:hover {
+            background-color: #4CAF50;
+            color: white;
+        }
+        /* Amélioration contraste sidebar */
+        section[data-testid="stSidebar"] {
+            background-color: rgba(20, 20, 20, 0.1);
+        }
         </style>
         """, unsafe_allow_html=True)
 
-    # --- 1. BARRE LATÉRALE AVEC EXPANDER ---
+    # --- BARRE LATÉRALE ---
     with st.sidebar:
         st.title("🚀 Smix Academy")
-
-        with st.expander("💡 Aide & Utilisation"):
-            st.write("""
-            1. Sélectionnez un thème ci-dessous.
-            2. Posez vos questions sur la formation.
-            3. Utilisez les boutons rapides pour gagner du temps.
-            """)
+        with st.expander("📖 Mode d'emploi"):
+            st.write("1. Choisissez une thématique.\n2. Posez votre question ou utilisez les raccourcis.")
 
         st.divider()
-        st.subheader("⚙️ Configuration")
         sujet = st.selectbox(
-            "Choisissez votre thématique :",
+            "🎓 Thématique de formation :",
             options=sorted(list(all_categories)),
             index=None,
-            placeholder="Sélectionner..."
+            placeholder="Sélectionnez un sujet"
         )
 
-        if st.button("🗑️ Effacer la discussion"):
+        if st.button("🗑️ Réinitialiser le Chat"):
             st.session_state.messages = []
             st.rerun()
 
     # --- ZONE DE CHAT ---
-    st.title("Chatbot SmixBot 🤖")
+    st.title("SmixBot Assistant 🤖")
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
     if sujet:
-        # --- 3. QUICK REPLIES (Boutons de suggestions) ---
-        st.write(f"Sujet : **{sujet}**")
-        cols = st.columns(2)
-        with cols[0]:
-            if st.button("📋 Détails du programme"):
-                st.session_state.temp_prompt = "Quels sont les détails du programme ?"
-        with cols[1]:
-            if st.button("⏳ Durée et horaires"):
-                st.session_state.temp_prompt = "Quelle est la durée de la formation ?"
+        # --- BOUTONS RAPIDES (3-4 suggestions) ---
+        st.markdown(f"💡 *Suggestions pour : **{sujet}***")
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            if st.button("📚 Programme"):
+                st.session_state.temp_prompt = "Quels sont les modules du programme ?"
+        with c2:
+            if st.button("💰 Tarifs"):
+                st.session_state.temp_prompt = "Quel est le coût de la formation ?"
+        with c3:
+            if st.button("🗓️ Prochaine session"):
+                st.session_state.temp_prompt = "Quand commence la prochaine session ?"
 
         # Affichage de l'historique
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
-        # Gestion de la saisie (input direct ou bouton rapide)
-        prompt = st.chat_input("Votre message...")
+        # Gestion de l'input (Direct ou Bouton)
+        prompt = st.chat_input("Posez votre question ici...")
+
         if "temp_prompt" in st.session_state:
             prompt = st.session_state.temp_prompt
             del st.session_state.temp_prompt
@@ -139,24 +158,24 @@ def main():
                 st.markdown(prompt)
 
             with st.chat_message("assistant"):
-                # --- 4. INDICATEUR VISUEL D'ÉTAT ---
-                with st.status("🔍 SmixBot analyse votre demande...", expanded=False) as status:
+                # Indicateur visuel d'état
+                with st.status("🔍 SmixBot recherche l'information...", expanded=False) as status:
                     response = get_response(prompt, sujet)
-                    time.sleep(1)  # Simulation recherche
-                    status.update(label="✅ Réponse trouvée !", state="complete", expanded=False)
+                    time.sleep(0.8)  # Délai naturel
+                    status.update(label="✅ Réponse trouvée", state="complete")
 
                 # Effet Streaming
                 placeholder = st.empty()
-                full_response = ""
+                full_res = ""
                 for word in response.split():
-                    full_response += word + " "
-                    placeholder.markdown(full_res := full_response + "▌")
-                    time.sleep(0.06)
-                placeholder.markdown(full_response)
+                    full_res += word + " "
+                    placeholder.markdown(full_res + "▌")
+                    time.sleep(0.05)
+                placeholder.markdown(full_res)
 
             st.session_state.messages.append({"role": "assistant", "content": response})
     else:
-        st.info("👋 Bienvenue ! Veuillez sélectionner une thématique dans le menu de gauche pour commencer à discuter.")
+        st.info("👋 Bonjour ! Pour commencer, sélectionnez une **thématique** dans la barre latérale de gauche.")
 
 
 if __name__ == "__main__":
