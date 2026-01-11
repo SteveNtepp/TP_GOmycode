@@ -1,37 +1,24 @@
 Salutations,Bonjour,Bonjour 👋 Bienvenue chez Smix Academy ! Comment puis-je t’aider aujourd’hui ?
 Salutations,Hello!,Hello 😄 Ravi de te voir ici. Tu veux des infos sur notre formation ?
 Salutations,Salut,Salut 👋 Comment puis-je t’aider concernant Smix Academy ?
-Salutations,Coucou,Coucou 😊 Dis-moi, que veux-tu savoir sur notre formation ?
-Salutations,Tu es là ?,Oui je suis là 👍 Je t’écoute.
-Salutations,Comment tu vas ?,Je vais super bien, merci 😄 Et toi ? Que puis-je faire pour toi aujourd’hui ?
-Salutations,Ça va ?,Ça va très bien merci 🙌 Tu veux parler de la formation Smix ?
 Salutations,Hey,Hey 👋 Bienvenue chez Smix Academy !
-Inscription,Comment s’inscrire à la formation ?,Tu peux t’inscrire en contactant directement l’équipe Smix Academy ou via nos pages officielles. On t’accompagne pas à pas.
-Inscription,Quand commencent les prochaines sessions ?,Les dates des prochaines sessions sont communiquées lors des Smix Talks et sur nos réseaux sociaux.
-Inscription,La formation est-elle en ligne ?,Oui, la formation est 100 % en ligne et accessible où que tu sois.
-Inscription,Puis-je suivre la formation depuis mon téléphone ?,Oui, la formation est accessible depuis un smartphone ou un ordinateur.
-Inscription,La formation est-elle ouverte à tous ?,Oui, toute personne motivée peut s’inscrire, quel que soit son niveau de départ.
-Inscription,Y a-t-il une sélection à l’entrée ?,Non, mais nous vérifions surtout ta motivation et ta disponibilité.
-Pédagogie,C’est quoi la formation FullStack Community Management ?,C’est une formation complète qui te rend capable de gérer la stratégie, le contenu, la publicité, l’IA et le business pour une marque ou une entreprise.
-Pédagogie,À qui s’adresse la formation ?,Aux entrepreneurs, professionnels en reconversion, freelances et jeunes souhaitant devenir Community Managers professionnels.
-Pédagogie,La formation est-elle adaptée aux débutants ?,Oui. Nous partons des bases et montons progressivement vers un niveau avancé.
-Pédagogie,Quels sont les modules de la formation ?,Design graphique, copywriting, montage vidéo, création de contenu par IA, stratégie CM, audit, automatisation, publicité Facebook et création de site web.
-Pédagogie,Y a-t-il beaucoup de pratique ?,Oui. La formation est très pratique avec exercices, projets et études de cas réels.
-Pédagogie,Utilisez-vous l’intelligence artificielle ?,Oui. L’IA est intégrée pour la création de contenu, la productivité et l’automatisation.
-Pédagogie,Quels outils vais-je apprendre ?,Canva, CapCut, ChatGPT, Meta Business Suite, Google Workspace et d’autres outils professionnels.
-Pédagogie,Y a-t-il un accompagnement ?,Oui. Tu bénéficies de mentorat, binôme, challenges et Smix Talks avec des professionnels.
-Paiement,Quel est le prix de la formation ?,Le prix est compris entre 150 000 FCFA et 200 000 FCFA selon la formule choisie.
-Paiement,Pourquoi cette différence de prix ?,Le prix dépend du niveau d’accompagnement et des options incluses.
-Paiement,Peut-on payer en plusieurs fois ?,Oui, des facilités de paiement peuvent être proposées sur demande.
-Paiement,Y a-t-il des réductions ?,Des offres spéciales peuvent être proposées lors des campagnes ou événements Smix.
-Paiement,Le paiement est-il sécurisé ?,Oui, tous les paiements sont sécurisés.
-Carrière,Que puis-je faire après la formation ?,Tu peux travailler comme Community Manager, freelance, salarié ou accompagner des entreprises dans leur stratégie digitale.
-Carrière,La formation aide-t-elle à trouver des clients ?,Oui. Nous formons aussi sur le personal branding et la prospection.
-Carrière,Y a-t-il une certification ?,Oui. Une attestation ou certification est délivrée via notre partenaire académique.
-Carrière,Puis-je rejoindre l’écosystème Smix ?,Oui. Les meilleurs profils peuvent accéder à des opportunités de missions et de collaboration.
-Carrière,La formation est-elle reconnue ?,Oui, grâce au partenariat avec un institut de formation agréé.
+Salutations,Ça va ?,Ça va très bien merci 🙌 Tu veux parler de la formation Smix ?
+Inscription,Comment s’inscrire ?,Pour t’inscrire, contacte directement l’équipe Smix Academy via WhatsApp ou nos pages officielles. On t’accompagne pas à pas dans la procédure.
+Inscription,Documents requis,L'inscription est simple : nous demandons principalement une pièce d'identité, une preuve de motivation et la confirmation de ta disponibilité pour les cours.
+Inscription,Dates limites,Les inscriptions se ferment généralement 48h avant le début de chaque session. Surveille nos Smix Talks pour ne pas rater la prochaine !
+Inscription,Conditions d'admission,Aucun diplôme spécifique n'est requis. Nous sélectionnons les candidats sur leur motivation, leur projet professionnel et leur envie d'apprendre.
+Pédagogie,Programme détaillé,Le programme couvre : Design graphique, Copywriting, Montage vidéo, IA générative, Stratégie Social Media, Publicité Meta et Création de sites web.
+Pédagogie,Supports de cours,Tu auras accès à des replays vidéo, des guides PDF, des checklists d'outils et un accès à notre plateforme communautaire.
+Pédagogie,Examens,L'évaluation se fait en continu via des exercices pratiques et un projet de fin de formation qui valide tes compétences réelles.
+Pédagogie,Projets pratiques,Tu travailleras sur des cas réels : création de calendrier éditorial, audit de marque, création de tunnels de vente et campagnes publicitaires.
+Paiement,Tarifs formation,La formation coûte entre 150 000 FCFA et 200 000 FCFA selon que tu choisisses la formule standard ou la formule avec mentorat renforcé.
+Paiement,Modalités de paiement,Le règlement s'effectue par virement, dépôt mobile (Orange Money/Wave) ou espèces. Nous privilégions la simplicité pour toi.
+Paiement,Bourses disponibles,Des bourses partielles ou des réductions "Early Bird" sont parfois offertes aux premiers inscrits de chaque session. Reste à l'écoute !
+Paiement,Remboursement,Toute demande de remboursement doit être formulée avant le début effectif des cours, selon nos conditions générales de vente.
+Carrière,Débouchés métiers,Tu pourras devenir Community Manager, Social Media Manager, Consultant Digital Freelance ou responsable de contenu en agence.
+Carrière,Aide au recrutement,Nous partageons régulièrement les offres de nos partenaires et nous t'aidons à optimiser ton CV et ton profil LinkedIn.
+Carrière,Stages,Les meilleurs étudiants de chaque promotion peuvent bénéficier de stages immersifs au sein de l'écosystème Smix ou chez nos partenaires.
+Carrière,Partenariats entreprises,Nous collaborons avec plusieurs agences et PME qui recrutent prioritairement nos certifiés pour leur expertise pratique.
 Aide,Je n’ai pas trouvé ma réponse,Merci pour ta question 😊 Elle est intéressante. Un membre de l’équipe Smix va te répondre très rapidement.
 Aide,Peu-tu m’aider ?,Bien sûr 👍 Dis-moi exactement ce que tu cherches à savoir.
-Aide,J’ai une autre question,Pas de souci 😊 Pose ta question et je ferai de mon mieux pour t’aider.
-Aide,Ce n’est pas clair,Merci pour ton retour 🙏 Peux-tu préciser ta question afin que je t’apporte une réponse adaptée ?
-Aide,Je veux parler à quelqu’un,Parfait 👍 Je te mets en relation avec un membre de l’équipe Smix Academy.
+Aide,Je veux parler à quelqu’un,Parfait 👍 Je te mets en relation avec un membre de l’équipe Smix Academy via WhatsApp.
