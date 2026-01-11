@@ -109,7 +109,7 @@ def main():
             st.session_state.messages = []
             st.rerun()
 
-    st.title("SmixBot Assistant 🤖")
+    st.title("SmixSales Assistant 🤖")
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
