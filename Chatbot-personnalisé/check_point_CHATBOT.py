@@ -4,21 +4,24 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import string
+import os  # Ajouté pour la gestion des chemins universels
 
 # --- INITIALISATION ---
 nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
-# 1. Chargement des données avec filtrage des catégories
+# 1. Chargement des données avec gestion du chemin universel
 qa_data = []
 all_categories = set()
-
-# Liste des catégories à masquer de la sélection utilisateur
 HIDDEN_CATEGORIES = ["Salutations", "Aide"]
 
+# Cette logique permet de trouver le fichier peu importe l'ordinateur
+base_path = os.path.dirname(__file__)
+file_path = os.path.join(base_path, "question.txt")
+
 try:
-    with open("question.txt", 'r', encoding='utf-8') as f:
+    with open(file_path, 'r', encoding='utf-8') as f:
         for line in f:
             parts = line.strip().split(',', 2)
             if len(parts) == 3:
@@ -27,9 +30,7 @@ try:
                 if cat not in HIDDEN_CATEGORIES:
                     all_categories.add(cat)
 except FileNotFoundError:
-    st.error(
-        "Le fichier 'question.txt' est introuvable. Vérifiez le chemin : /Users/macbook/PyCharmMiscProject/TP_GOmycode/Chatbot-personnalisé/question.txt")
-
+    st.error(f"Erreur : Le fichier 'question.txt' est introuvable dans le dossier du script.")
 
 # 2. Fonction de Prétraitement
 def preprocess(sentence):
@@ -39,8 +40,7 @@ def preprocess(sentence):
     lemmatizer = WordNetLemmatizer()
     return [lemmatizer.lemmatize(w) for w in words]
 
-
-# 3. Logique de recherche (Hybride : Catégorie choisie + Salutations/Aide)
+# 3. Logique de recherche
 def get_response(query, selected_category):
     query_tokens = preprocess(query)
     if not query_tokens:
@@ -49,7 +49,6 @@ def get_response(query, selected_category):
     max_similarity = -1
     best_response = "Désolé, je n'ai pas trouvé de réponse précise. Essayez de reformuler ou changez de catégorie."
 
-    # On cherche dans : la catégorie sélectionnée ET les catégories masquées (Salutations/Aide)
     target_categories = [selected_category] + HIDDEN_CATEGORIES
     filtered_data = [item for item in qa_data if item['categorie'] in target_categories]
 
@@ -65,13 +64,11 @@ def get_response(query, selected_category):
 
     return best_response
 
-
 # 4. INTERFACE STREAMLIT
 def main():
     st.set_page_config(page_title="SmixBot", page_icon="🤖")
     st.title("SmixBot 🤖")
 
-    # Barre latérale pour le choix du sujet (exclut Salutations et Aide)
     with st.sidebar:
         st.header("Configuration")
         st.write("Choisissez un thème pour orienter la discussion.")
@@ -87,26 +84,21 @@ def main():
             st.session_state.messages = []
             st.rerun()
 
-    # Initialisation de l'historique
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # Affichage de l'interface de chat
     if sujet:
         st.info(f"📍 Vous discutez de : **{sujet}**")
 
-        # Afficher l'historique
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
-        # Saisie utilisateur
         if prompt := st.chat_input("Posez votre question..."):
             st.session_state.messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
 
-            # Réponse du bot (inclut la logique pour les salutations même si non sélectionnées)
             response = get_response(prompt, sujet)
 
             st.session_state.messages.append({"role": "assistant", "content": response})
@@ -114,9 +106,7 @@ def main():
                 st.markdown(response)
     else:
         st.warning("👈 Veuillez sélectionner une catégorie dans le menu à gauche pour commencer.")
-        st.write(
-            "Une fois une catégorie choisie, vous pourrez poser vos questions et SmixBot vous répondra en utilisant les données de formation.")
-
+        st.write("Une fois une catégorie choisie, SmixBot utilisera les données de formation pour vous répondre.")
 
 if __name__ == "__main__":
     main()
