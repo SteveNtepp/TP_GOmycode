@@ -19,7 +19,7 @@ base_path = os.path.dirname(__file__)
 file_path = os.path.join(base_path, "question.txt")
 
 # --- CONFIGURATION WHATSAPP ---
-NUMERO_WA = "23767964336"
+NUMERO_WA = "237679648336"
 LIEN_WA = f"https://wa.me/{NUMERO_WA}?text=Bonjour%20Smix%20Academy,%20j'aimerais%20en%20savoir%20plus%20sur%20vos%20formations."
 
 # 1. Chargement des données
